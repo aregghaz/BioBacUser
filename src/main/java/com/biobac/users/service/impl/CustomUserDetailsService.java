@@ -2,6 +2,7 @@ package com.biobac.users.service.impl;
 
 
 import com.biobac.users.entity.User;
+import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.repository.UserRepository;
 import com.biobac.users.utils.details.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isEmpty()) {
-            throw new UsernameNotFoundException("User not found");
+            throw new NotFoundException("User not found");
         }
 //        if (!user.get().getActive()) {
 //            throw new UserInactiveException("User account is inactive");

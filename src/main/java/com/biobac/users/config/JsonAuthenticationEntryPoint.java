@@ -1,6 +1,7 @@
 package com.biobac.users.config;
 
-import com.biobac.users.dto.ErrorResponse;
+import com.biobac.users.response.ApiResponse;
+import com.biobac.users.utils.ResponseUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,10 +22,10 @@ public class JsonAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        int status = HttpServletResponse.SC_UNAUTHORIZED;
-        ErrorResponse body = new ErrorResponse(status, "Unauthorized");
-        response.setStatus(status);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
+
+        ApiResponse<Object> body = ResponseUtil.error("Unauthorized");
         response.getWriter().write(objectMapper.writeValueAsString(body));
         response.getWriter().flush();
     }

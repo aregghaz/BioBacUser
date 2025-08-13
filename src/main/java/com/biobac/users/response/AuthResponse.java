@@ -1,4 +1,4 @@
-package com.biobac.users.dto;
+package com.biobac.users.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
