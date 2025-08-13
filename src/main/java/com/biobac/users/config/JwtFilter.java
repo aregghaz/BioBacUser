@@ -1,6 +1,7 @@
 package com.biobac.users.config;
 
 
+import com.biobac.users.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

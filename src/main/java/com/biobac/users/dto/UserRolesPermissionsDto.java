@@ -1,19 +1,13 @@
 package com.biobac.users.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
 public class UserRolesPermissionsDto {
     private Long id;
     private String username;
-    private List<String> roles;
-    private List<String> permissions;
+    private List<RolePermissionsDto> roles;
 }

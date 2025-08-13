@@ -1,6 +1,7 @@
 package com.biobac.users.config;
 
-import com.biobac.users.dto.ErrorResponse;
+import com.biobac.users.response.ApiResponse;
+import com.biobac.users.utils.ResponseUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,10 +23,10 @@ public class JsonAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        int status = HttpServletResponse.SC_FORBIDDEN;
-        ErrorResponse body = new ErrorResponse(status, "Access denied");
-        response.setStatus(status);
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");
+
+        ApiResponse<Object> body = ResponseUtil.error("Access denied");
         response.getWriter().write(objectMapper.writeValueAsString(body));
         response.getWriter().flush();
     }

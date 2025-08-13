@@ -1,4 +1,4 @@
-package com.biobac.users.config;
+package com.biobac.users.utils;
 
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Role;
