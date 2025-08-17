@@ -5,4 +5,5 @@ import com.biobac.users.response.AuthResponse;
 
 public interface AuthService {
     AuthResponse login(AuthRequest request);
+    AuthResponse refreshToken(String token);
 }

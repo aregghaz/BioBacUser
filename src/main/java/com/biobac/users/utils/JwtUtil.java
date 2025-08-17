@@ -17,14 +17,37 @@ import java.util.stream.Collectors;
 public class JwtUtil {
     private final Key key;
     private final long jwtExpirationMs;
+    private final Key refreshKey;
 
     public JwtUtil(@Value("${jwt.secret}") String jwtSecret,
-                   @Value("${jwt.expiration-ms}") long jwtExpirationMs) {
+                   @Value("${jwt.expiration-ms}") long jwtExpirationMs,
+                   @Value("${jwt.refresh-token.secret}") String refreshSecret) {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.jwtExpirationMs = jwtExpirationMs;
+        this.refreshKey = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(User user) {
+    public String generateRefreshToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getUsername())
+                .setIssuedAt(new Date())
+                .signWith(refreshKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean validateRefreshToken(String token) {
+        try {
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(refreshKey)
+                    .build()
+                    .parseClaimsJws(token);
+            return claims.getBody().getSubject() != null;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         if (user.getRoles() != null) {
             List<String> roles = user.getRoles().stream()
@@ -83,7 +106,7 @@ public class JwtUtil {
         return Collections.emptyList();
     }
 
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
         try {
             parseClaims(token);
             return true;
