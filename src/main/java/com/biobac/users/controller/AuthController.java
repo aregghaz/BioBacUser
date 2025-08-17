@@ -38,4 +38,14 @@ public class AuthController {
                 "User registered successfully"
         );
     }
+
+    @PostMapping("refresh-token")
+    public ApiResponse<AuthResponse> refreshToken(@RequestBody String refreshToken) {
+        AuthResponse authResponse = authService.refreshToken(refreshToken);
+        return ResponseUtil.success(
+                "Token refreshed successfully",
+                authResponse
+        );
+
+    }
 }

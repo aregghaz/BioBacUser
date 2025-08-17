@@ -1,11 +1,13 @@
 package com.biobac.users.service.impl;
 
+import com.biobac.users.entity.RefreshToken;
 import com.biobac.users.entity.User;
 import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.repository.UserRepository;
 import com.biobac.users.request.AuthRequest;
 import com.biobac.users.response.AuthResponse;
 import com.biobac.users.service.AuthService;
+import com.biobac.users.service.RefreshTokenService;
 import com.biobac.users.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,22 +25,36 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     @Transactional
     public AuthResponse login(AuthRequest request) {
         try {
             User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new NotFoundException("User not found with username: " + request.getUsername()));
+                    .orElseThrow(() -> new AuthenticationException("Invalid username or password") {
+                    });
 
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
 
-            return new AuthResponse(jwtUtil.generateToken(user));
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+            return new AuthResponse(jwtUtil.generateAccessToken(user), refreshToken.getToken());
 
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(String token) {
+        RefreshToken refreshToken = refreshTokenService.verifyRefreshToken(token);
+        User user = userRepository.findById(refreshToken.getUser().getId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        return new AuthResponse(jwtUtil.generateAccessToken(user), refreshToken.getToken());
     }
 }
