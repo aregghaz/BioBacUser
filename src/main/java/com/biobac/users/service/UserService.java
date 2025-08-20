@@ -40,4 +40,7 @@ public interface UserService {
 
     @Transactional(readOnly = true)
     Pair<List<UserSingleResponse>, PaginationMetadata> listUsersWithRolesAndPermissionsPaginated(Map<String, FilterCriteria> filters, int page, int size, String sortBy, String sortDir);
+
+    @Transactional
+    void editUserRoles(Long userId, List<Integer> roles);
 }

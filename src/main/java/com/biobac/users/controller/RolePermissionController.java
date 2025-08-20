@@ -1,5 +1,6 @@
 package com.biobac.users.controller;
 
+import com.biobac.users.dto.SelectResponse;
 import com.biobac.users.response.ApiResponse;
 import com.biobac.users.dto.RolePermissionsDto;
 import com.biobac.users.service.RolePermissionService;
@@ -21,5 +22,17 @@ public class RolePermissionController {
     public ApiResponse<List<RolePermissionsDto>> getRolePermissions() {
         List<RolePermissionsDto> rolePermissionsDtos = rolePermissionService.getRolePermissions();
         return ResponseUtil.success("Role permissions fetched successfully", rolePermissionsDtos);
+    }
+
+    @GetMapping("/all-roles")
+    public ApiResponse<List<SelectResponse>> getAllRoles() {
+        List<SelectResponse> roles = rolePermissionService.getAllRoles();
+        return ResponseUtil.success("Roles fetched successfully", roles);
+    }
+
+    @GetMapping("/all-permissions")
+    public ApiResponse<List<SelectResponse>> getAllPermissions() {
+        List<SelectResponse> permissions = rolePermissionService.getAllPermissions();
+        return ResponseUtil.success("Permissions fetched successfully", permissions);
     }
 }

@@ -12,67 +12,108 @@ import org.springframework.context.annotation.Bean;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class UsersApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(UsersApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(UsersApplication.class, args);
+    }
 
-	@Bean
-	CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository) {
-		return args -> {
-			// Define static permissions
-			List<String> permissionNames = List.of(
-					"USER_READ",
-					"USER_CREATE",
-					"USER_UPDATE",
-					"USER_DELETE"
-			);
+    @Bean
+    CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository) {
+        return args -> {
+            // Define entities in the system
+            List<String> entities = List.of(
+                    "USER", "WAREHOUSE", "PRODUCT", "INGREDIENT",
+                    "INGREDIENT_GROUP", "INGREDIENT_COMPONENT", "RECIPE_ITEM"
+            );
 
-			// Ensure permissions exist
-			Set<Permission> allPermissions = new HashSet<>();
-			for (String pname : permissionNames) {
-				Permission p = permissionRepository.findByName(pname)
-						.orElseGet(() -> {
-							Permission np = new Permission();
-							np.setName(pname);
-							return permissionRepository.save(np);
-						});
-				allPermissions.add(p);
-			}
+            // Define operations
+            List<String> operations = List.of("READ", "CREATE", "UPDATE", "DELETE");
 
-			// ROLE_ADMIN with all permissions
-			Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
-				Role r = new Role();
-				r.setName("ROLE_ADMIN");
-				r.setPermissions(new HashSet<>(allPermissions));
-				return roleRepository.save(r);
-			});
-			// Ensure admin has all permissions if created earlier without them
-			if (adminRole.getPermissions() == null || adminRole.getPermissions().size() != allPermissions.size()) {
-				adminRole.setPermissions(new HashSet<>(allPermissions));
-				roleRepository.save(adminRole);
-			}
+            // Ensure all permissions exist
+            Set<Permission> allPermissions = new HashSet<>();
+            for (String entity : entities) {
+                for (String op : operations) {
+                    String permName = entity + "_" + op;
+                    Permission p = permissionRepository.findByName(permName)
+                            .orElseGet(() -> {
+                                Permission np = new Permission();
+                                np.setName(permName);
+                                return permissionRepository.save(np);
+                            });
+                    allPermissions.add(p);
+                }
+            }
 
-			// ROLE_USER with read permission
-			Permission readPerm = permissionRepository.findByName("USER_READ").orElse(null);
-			Role userRole = roleRepository.findByName("ROLE_USER").orElseGet(() -> {
-				Role r = new Role();
-				r.setName("ROLE_USER");
-				HashSet<Permission> perms = new HashSet<>();
-				if (readPerm != null) perms.add(readPerm);
-				r.setPermissions(perms);
-				return roleRepository.save(r);
-			});
-			if (userRole.getPermissions() == null) {
-				userRole.setPermissions(new HashSet<>());
-			}
-			if (readPerm != null && userRole.getPermissions().stream().noneMatch(p -> p.getName().equals("USER_READ"))) {
-				userRole.getPermissions().add(readPerm);
-				roleRepository.save(userRole);
-			}
-		};
-	}
+            // ===== GLOBAL ROLES =====
+            // SUPER_ADMIN -> all permissions
+            Role superAdmin = roleRepository.findByName("ROLE_SUPER_ADMIN").orElseGet(() -> {
+                Role r = new Role();
+                r.setName("ROLE_SUPER_ADMIN");
+                r.setPermissions(new HashSet<>(allPermissions));
+                return roleRepository.save(r);
+            });
+            superAdmin.setPermissions(new HashSet<>(allPermissions));
+            roleRepository.save(superAdmin);
+
+            // ADMIN -> all permissions (same as superAdmin for now, but can restrict later)
+            Role globalAdmin = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
+                Role r = new Role();
+                r.setName("ROLE_ADMIN");
+                r.setPermissions(new HashSet<>(allPermissions));
+                return roleRepository.save(r);
+            });
+            globalAdmin.setPermissions(new HashSet<>(allPermissions));
+            roleRepository.save(globalAdmin);
+
+            // ===== ENTITY-SPECIFIC ROLES =====
+            for (String entity : entities) {
+                // Collect perms by operation
+                Set<Permission> entityAllPerms = allPermissions.stream()
+                        .filter(p -> p.getName().startsWith(entity + "_"))
+                        .collect(Collectors.toSet());
+
+                Set<Permission> entityManagerPerms = entityAllPerms.stream()
+                        .filter(p -> !p.getName().endsWith("_DELETE"))
+                        .collect(Collectors.toSet());
+
+                Set<Permission> entityUserPerms = entityAllPerms.stream()
+                        .filter(p -> p.getName().endsWith("_READ"))
+                        .collect(Collectors.toSet());
+
+                // ROLE_<ENTITY>_ADMIN
+                Role entityAdmin = roleRepository.findByName("ROLE_" + entity + "_ADMIN").orElseGet(() -> {
+                    Role r = new Role();
+                    r.setName("ROLE_" + entity + "_ADMIN");
+                    r.setPermissions(new HashSet<>(entityAllPerms));
+                    return roleRepository.save(r);
+                });
+                entityAdmin.setPermissions(entityAllPerms);
+                roleRepository.save(entityAdmin);
+
+                // ROLE_<ENTITY>_MANAGER
+                Role entityManager = roleRepository.findByName("ROLE_" + entity + "_MANAGER").orElseGet(() -> {
+                    Role r = new Role();
+                    r.setName("ROLE_" + entity + "_MANAGER");
+                    r.setPermissions(new HashSet<>(entityManagerPerms));
+                    return roleRepository.save(r);
+                });
+                entityManager.setPermissions(entityManagerPerms);
+                roleRepository.save(entityManager);
+
+                // ROLE_<ENTITY>_USER
+                Role entityUser = roleRepository.findByName("ROLE_" + entity + "_USER").orElseGet(() -> {
+                    Role r = new Role();
+                    r.setName("ROLE_" + entity + "_USER");
+                    r.setPermissions(new HashSet<>(entityUserPerms));
+                    return roleRepository.save(r);
+                });
+                entityUser.setPermissions(entityUserPerms);
+                roleRepository.save(entityUser);
+            }
+        };
+    }
 }

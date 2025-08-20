@@ -1,6 +1,5 @@
-package com.biobac.users.utils.details;
+package com.biobac.users.utils;
 
-import com.biobac.users.utils.DateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;

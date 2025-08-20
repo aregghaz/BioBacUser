@@ -5,6 +5,7 @@ import com.biobac.users.dto.UserRolesPermissionsDto;
 import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.response.ApiResponse;
 import com.biobac.users.response.UserSingleResponse;
+import com.biobac.users.service.RolePermissionService;
 import com.biobac.users.service.UserService;
 import com.biobac.users.utils.ResponseUtil;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AdminController {
     private final UserService userService;
+    private final RolePermissionService rolePermissionService;
 
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_READ')")
     @GetMapping("/users")
@@ -51,14 +53,14 @@ public class AdminController {
         return ResponseUtil.success("User fetched successfully", userDto);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_WRITE')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_CREATE') or hasAuthority('USER_UPDATE')")
     @PostMapping("/users/{userId}/roles/{roleName}")
     public ApiResponse<String> assignRoleToUser(@PathVariable Long userId, @PathVariable String roleName) {
         userService.assignRoleToUser(userId, roleName);
         return ResponseUtil.success("Role assigned to user successfully");
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_DELETE')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_DELETE') or hasAuthority('USER_UPDATE')")
     @DeleteMapping("/users/{userId}/roles/{roleName}")
     public ApiResponse<String> removeRoleFromUser(@PathVariable Long userId, @PathVariable String roleName) {
         userService.removeRoleFromUser(userId, roleName);
@@ -70,5 +72,19 @@ public class AdminController {
     public ApiResponse<String> assignPermissionToRole(@PathVariable String roleName, @PathVariable String permissionName) {
         userService.assignPermissionToRole(roleName, permissionName);
         return ResponseUtil.success("Permission assigned to role successfully");
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ROLE_READ') or hasAuthority('ROLE_CREATE') or hasAuthority('ROLE_UPDATE')")
+    @PostMapping("/users/{userId}/roles")
+    public ApiResponse<String> editUserRoles(@PathVariable Long userId, @RequestBody List<Integer> roles) {
+        userService.editUserRoles(userId, roles);
+        return ResponseUtil.success("User roles updated successfully");
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ROLE_CREATE') or hasAuthority('ROLE_UPDATE')")
+    @PostMapping("/roles/{roleId}/permissions")
+    public ApiResponse<String> editRolePermissions(@PathVariable Long roleId, @RequestBody List<Integer> permissions) {
+        rolePermissionService.editRolePermissions(roleId, permissions);
+        return ResponseUtil.success("Role permissions updated successfully");
     }
 }

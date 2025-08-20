@@ -1,21 +1,28 @@
 package com.biobac.users.service.impl;
 
-import com.biobac.users.dto.RolePermissionsDto;
 import com.biobac.users.dto.PermissionDto;
+import com.biobac.users.dto.RolePermissionsDto;
+import com.biobac.users.dto.SelectResponse;
+import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Role;
+import com.biobac.users.exception.NotFoundException;
+import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.RoleRepository;
 import com.biobac.users.service.RolePermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class RolePermissionServiceImpl implements RolePermissionService {
     private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -31,6 +38,49 @@ public class RolePermissionServiceImpl implements RolePermissionService {
                                 .collect(Collectors.toList())
                 ))
                 .sorted((a, b) -> a.getRoleName().compareToIgnoreCase(b.getRoleName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void editRolePermissions(Long roleId, List<Integer> permissions) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new NotFoundException("Role not found with id: " + roleId));
+        Set<Permission> managedPermissions = new HashSet<>();
+        if (!permissions.isEmpty()) {
+            for (Integer permissionId : permissions) {
+                if (permissionId == null) {
+                    continue;
+                }
+                Permission permission = permissionRepository.findById(permissionId.longValue())
+                        .orElseThrow(() -> new NotFoundException("Permission not found with id: " + permissionId));
+                managedPermissions.add(permission);
+            }
+        }
+        role.setPermissions(managedPermissions);
+        roleRepository.save(role);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SelectResponse> getAllRoles() {
+        return roleRepository.findAll().stream()
+                .map(role -> SelectResponse.builder()
+                        .id(role.getId())
+                        .name(role.getName())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SelectResponse> getAllPermissions() {
+        return permissionRepository.findAll().stream()
+                .map(permission -> SelectResponse.builder()
+                        .id(permission.getId())
+                        .name(permission.getName())
+                        .build())
                 .collect(Collectors.toList());
     }
 }

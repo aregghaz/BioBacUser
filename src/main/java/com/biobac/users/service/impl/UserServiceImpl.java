@@ -252,6 +252,27 @@ public class UserServiceImpl implements UserService {
         return Pair.of(content, metadata);
     }
 
+    @Override
+    @Transactional
+    public void editUserRoles(Long userId, List<Integer> roles) {
+        if(roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("Roles list cannot be null or empty");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        Set<Role> managedRoles = new HashSet<>();
+        for (Integer roleId : roles) {
+            if (roleId == null) {
+                continue;
+            }
+            Role role = roleRepository.findById(roleId.longValue())
+                    .orElseThrow(() -> new NotFoundException("Role not found with ID: " + roleId));
+            managedRoles.add(role);
+        }
+        user.setRoles(managedRoles);
+        userRepository.save(user);
+    }
+
     private UserSingleResponse toSingleResponse(User user) {
         if (user == null) {
             return null;
