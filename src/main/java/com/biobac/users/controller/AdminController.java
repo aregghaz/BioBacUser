@@ -1,10 +1,14 @@
 package com.biobac.users.controller;
 
+import com.biobac.users.dto.PaginationMetadata;
 import com.biobac.users.dto.UserRolesPermissionsDto;
+import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.response.ApiResponse;
+import com.biobac.users.response.UserSingleResponse;
 import com.biobac.users.service.UserService;
 import com.biobac.users.utils.ResponseUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.util.Pair;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +29,19 @@ public class AdminController {
         Map<String, Object> metadata = Map.of("totalUsers", users.size());
 
         return ResponseUtil.success("Users fetched successfully", users, metadata);
+    }
+
+    @PostMapping("/users/pagination")
+    public ApiResponse<List<UserSingleResponse>> listUsersWithRolesAndPermissionsPaginated(
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @RequestParam(required = false, defaultValue = "id") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDir,
+            @RequestBody Map<String, FilterCriteria> filters) {
+
+        Pair<List<UserSingleResponse>, PaginationMetadata> result =
+                userService.listUsersWithRolesAndPermissionsPaginated(filters, page, size, sortBy, sortDir);
+        return ResponseUtil.success("Users fetched successfully", result.getFirst(), result.getSecond());
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_READ')")
