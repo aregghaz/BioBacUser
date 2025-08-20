@@ -1,6 +1,7 @@
 package com.biobac.users.service.impl;
 
 
+import com.biobac.users.dto.PaginationMetadata;
 import com.biobac.users.dto.PermissionDto;
 import com.biobac.users.dto.RolePermissionsDto;
 import com.biobac.users.dto.UserRolesPermissionsDto;
@@ -12,12 +13,20 @@ import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.RoleRepository;
 import com.biobac.users.repository.UserRepository;
+import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.request.PermissionRequest;
 import com.biobac.users.request.RoleRequest;
 import com.biobac.users.request.UserRegisterRequest;
 import com.biobac.users.response.UserSingleResponse;
 import com.biobac.users.service.UserService;
+import com.biobac.users.utils.specifications.UserSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -207,6 +217,39 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
         return toSingleResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Pair<List<UserSingleResponse>, PaginationMetadata> listUsersWithRolesAndPermissionsPaginated(Map<String, FilterCriteria> filters, int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("asc") ?
+                Sort.by(sortBy).ascending() :
+                Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<User> spec = UserSpecification.buildSpecification(filters);
+
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        List<UserSingleResponse> content = userPage.getContent()
+                .stream()
+                .map(this::toSingleResponse)
+                .collect(Collectors.toList());
+
+        PaginationMetadata metadata = new PaginationMetadata(
+                userPage.getNumber(),
+                userPage.getSize(),
+                userPage.getTotalElements(),
+                userPage.getTotalPages(),
+                userPage.isLast(),
+                filters,
+                sortDir,
+                sortBy,
+                "userTable"
+        );
+
+        return Pair.of(content, metadata);
     }
 
     private UserSingleResponse toSingleResponse(User user) {
