@@ -12,6 +12,12 @@ import java.util.Set;
 public class UserRegisterRequest {
     @NotBlank(message = "Username is required")
     private String username;
+    @NotBlank(message = "Firstname is required")
+    private String firstname;
+    @NotBlank(message = "Lastname is required")
+    private String lastname;
+    @NotBlank(message = "Phone number is required")
+    private String phoneNumber;
     @Email(message = "Email should be valid")
     private String email;
     @NotBlank(message = "Password is required")

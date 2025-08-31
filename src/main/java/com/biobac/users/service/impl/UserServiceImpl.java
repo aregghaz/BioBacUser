@@ -13,10 +13,12 @@ import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.RoleRepository;
 import com.biobac.users.repository.UserRepository;
+import com.biobac.users.request.ChangePasswordRequest;
 import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.request.PermissionRequest;
 import com.biobac.users.request.RoleRequest;
 import com.biobac.users.request.UserRegisterRequest;
+import com.biobac.users.request.UserUpdateRequest;
 import com.biobac.users.response.UserSingleResponse;
 import com.biobac.users.service.UserService;
 import com.biobac.users.utils.specifications.UserSpecification;
@@ -27,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,6 +37,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -98,6 +102,9 @@ public class UserServiceImpl implements UserService {
         }
         User user = new User();
         user.setUsername(userRequest.getUsername());
+        user.setFirstname(userRequest.getFirstname());
+        user.setLastname(userRequest.getLastname());
+        user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setEmail(userRequest.getEmail());
         user.setActive(true);
         user.setPassword(userRequest.getPassword() != null ? passwordEncoder.encode(userRequest.getPassword()) : null);
@@ -294,10 +301,47 @@ public class UserServiceImpl implements UserService {
         return new UserSingleResponse(
                 user.getId(),
                 user.getUsername(),
+                user.getFirstname(),
+                user.getLastname(),
+                user.getPhoneNumber(),
                 user.getEmail(),
                 user.getActive(),
                 roles
         );
+    }
+
+    @Override
+    @Transactional
+    public UserSingleResponse updateUser(Long userId, UserUpdateRequest updateRequest) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+
+        if (updateRequest.getUsername() != null && !updateRequest.getUsername().equalsIgnoreCase(user.getUsername())) {
+            userRepository.findByUsername(updateRequest.getUsername())
+                    .filter(found -> !found.getId().equals(userId))
+                    .ifPresent(found -> { throw new DuplicateException("Username already exists: " + updateRequest.getUsername()); });
+            user.setUsername(updateRequest.getUsername());
+        }
+
+        if (updateRequest.getEmail() != null && !updateRequest.getEmail().equalsIgnoreCase(user.getEmail())) {
+            userRepository.findByEmail(updateRequest.getEmail())
+                    .filter(found -> !found.getId().equals(userId))
+                    .ifPresent(found -> { throw new DuplicateException("Email already exists: " + updateRequest.getEmail()); });
+            user.setEmail(updateRequest.getEmail());
+        }
+
+        if (updateRequest.getPhoneNumber() != null) {
+            user.setPhoneNumber(updateRequest.getPhoneNumber());
+        }
+        if (updateRequest.getFirstname() != null) {
+            user.setFirstname(updateRequest.getFirstname());
+        }
+        if (updateRequest.getLastname() != null) {
+            user.setLastname(updateRequest.getLastname());
+        }
+
+        userRepository.save(user);
+        return toSingleResponse(user);
     }
 
     private UserRolesPermissionsDto toDto(User user) {
@@ -320,5 +364,27 @@ public class UserServiceImpl implements UserService {
                 user.getUsername(),
                 roles
         );
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is missing");
+        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
+
+        if (user.getPassword() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be changed for this account");
+        }
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password is incorrect");
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from the old password");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

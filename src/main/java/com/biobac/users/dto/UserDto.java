@@ -9,6 +9,11 @@ import java.util.Set;
 public class UserDto {
     private Long id;
     private String username;
+    private String firstname;
+    private String lastname;
+    private String phoneNumber;
+    private String email;
+    private Boolean active;
     // Role names, e.g., ROLE_USER, ROLE_ADMIN
     private Set<String> roles;
 

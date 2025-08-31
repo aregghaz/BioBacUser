@@ -3,6 +3,8 @@ package com.biobac.users.utils;
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Role;
 import com.biobac.users.entity.User;
+import com.biobac.users.exception.InvalidTokenException;
+import com.biobac.users.exception.TokenExpiredException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,7 +68,7 @@ public class JwtUtil {
             if (!perms.isEmpty()) claims.put("perms", perms);
         }
         Date now = new Date();
-        Date exp = new Date(now.getTime() + jwtExpirationMs);
+        Date exp = new Date(now.getTime() + 180000);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getUsername())
@@ -106,12 +108,13 @@ public class JwtUtil {
         return Collections.emptyList();
     }
 
-    public boolean validateAccessToken(String token) {
+    public void validateAccessToken(String token) {
         try {
             parseClaims(token);
-            return true;
+        } catch (ExpiredJwtException e) {
+            throw new TokenExpiredException("Access token expired");
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            throw new InvalidTokenException("Invalid access token");
         }
     }
 

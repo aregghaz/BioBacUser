@@ -2,8 +2,10 @@ package com.biobac.users.service;
 
 import com.biobac.users.dto.PaginationMetadata;
 import com.biobac.users.dto.UserRolesPermissionsDto;
+import com.biobac.users.request.ChangePasswordRequest;
 import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.request.UserRegisterRequest;
+import com.biobac.users.request.UserUpdateRequest;
 import com.biobac.users.response.UserSingleResponse;
 import com.biobac.users.response.UserTableResponse;
 
@@ -43,4 +45,10 @@ public interface UserService {
 
     @Transactional
     void editUserRoles(Long userId, List<Integer> roles);
+
+    @Transactional
+    UserSingleResponse updateUser(Long userId, UserUpdateRequest updateRequest);
+
+    @Transactional
+    void changePassword(String username, ChangePasswordRequest request);
 }

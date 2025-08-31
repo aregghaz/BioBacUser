@@ -2,12 +2,15 @@ package com.biobac.users;
 
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Role;
+import com.biobac.users.entity.User;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.RoleRepository;
+import com.biobac.users.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 import java.util.List;
@@ -22,12 +25,12 @@ public class UsersApplication {
     }
 
     @Bean
-    CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository) {
+    CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // Define entities in the system
             List<String> entities = List.of(
                     "USER", "WAREHOUSE", "PRODUCT", "INGREDIENT",
-                    "INGREDIENT_GROUP", "INGREDIENT_COMPONENT", "RECIPE_ITEM"
+                    "INGREDIENT_GROUP", "INGREDIENT_COMPONENT", "RECIPE_ITEM", "INVENTORY_ITEM"
             );
 
             // Define operations
@@ -114,6 +117,25 @@ public class UsersApplication {
                 entityUser.setPermissions(entityUserPerms);
                 roleRepository.save(entityUser);
             }
+
+            // ===== DEFAULT ADMIN USER SEEDING =====
+            User adminUser = userRepository.findByUsername("string").orElse(null);
+            if (adminUser == null) {
+                adminUser = new User();
+                adminUser.setUsername("string");
+                adminUser.setFirstname("string");
+                adminUser.setLastname("string");
+                adminUser.setPhoneNumber("1231231234");
+                adminUser.setEmail("string@gmail.com");
+                adminUser.setPassword(passwordEncoder.encode("string"));
+                adminUser.setActive(true);
+                adminUser.setRoles(new HashSet<>());
+            }
+            if (adminUser.getRoles() == null) {
+                adminUser.setRoles(new HashSet<>());
+            }
+            adminUser.getRoles().add(globalAdmin);
+            userRepository.save(adminUser);
         };
     }
 }

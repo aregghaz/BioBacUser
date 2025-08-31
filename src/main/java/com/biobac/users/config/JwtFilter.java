@@ -1,8 +1,10 @@
 package com.biobac.users.config;
 
 
-import com.biobac.users.utils.JwtUtil;
+import com.biobac.users.exception.InvalidTokenException;
+import com.biobac.users.exception.TokenExpiredException;
 import com.biobac.users.response.ApiResponse;
+import com.biobac.users.utils.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,6 +25,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -35,7 +38,10 @@ public class JwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            if (jwtUtil.validateAccessToken(token)) {
+
+            try {
+                jwtUtil.validateAccessToken(token); // throws if expired/invalid
+
                 String username = jwtUtil.extractUsername(token);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -44,9 +50,30 @@ public class JwtFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
+
+            } catch (TokenExpiredException ex) {
+                writeErrorResponse(response, "Access token expired");
+                return;
+            } catch (InvalidTokenException ex) {
+                writeErrorResponse(response, "Invalid access token.");
+                return;
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void writeErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                false,
+                message,
+                null,
+                null
+        );
+
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 
     @Override

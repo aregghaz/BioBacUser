@@ -15,6 +15,9 @@ import java.util.List;
 public class UserSingleResponse {
     private Long id;
     private String username;
+    private String firstname;
+    private String lastname;
+    private String phoneNumber;
     private String email;
     private Boolean active;
     private List<RolePermissionsDto> rolesPermissions;
