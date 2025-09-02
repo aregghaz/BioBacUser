@@ -30,7 +30,8 @@ public class UsersApplication {
             // Define entities in the system
             List<String> entities = List.of(
                     "USER", "WAREHOUSE", "PRODUCT", "INGREDIENT",
-                    "INGREDIENT_GROUP", "INGREDIENT_COMPONENT", "RECIPE_ITEM", "INVENTORY_ITEM"
+                    "INGREDIENT_GROUP", "RECIPE_COMPONENT", "RECIPE_ITEM", "INVENTORY_ITEM",
+                    "PRODUCT_HISTORY", "INGREDIENT_HISTORY", "UNIT", "UNIT_TYPE"
             );
 
             // Define operations
@@ -122,12 +123,12 @@ public class UsersApplication {
             User adminUser = userRepository.findByUsername("string").orElse(null);
             if (adminUser == null) {
                 adminUser = new User();
-                adminUser.setUsername("string");
-                adminUser.setFirstname("string");
-                adminUser.setLastname("string");
+                adminUser.setUsername("adminuser");
+                adminUser.setFirstname("JOHNY");
+                adminUser.setLastname("SILVERHAND");
                 adminUser.setPhoneNumber("1231231234");
-                adminUser.setEmail("string@gmail.com");
-                adminUser.setPassword(passwordEncoder.encode("string"));
+                adminUser.setEmail("test@gmail.com");
+                adminUser.setPassword(passwordEncoder.encode("adminuser"));
                 adminUser.setActive(true);
                 adminUser.setRoles(new HashSet<>());
             }

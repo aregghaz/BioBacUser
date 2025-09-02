@@ -7,8 +7,6 @@ import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.request.UserRegisterRequest;
 import com.biobac.users.request.UserUpdateRequest;
 import com.biobac.users.response.UserSingleResponse;
-import com.biobac.users.response.UserTableResponse;
-
 import org.springframework.data.util.Pair;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;

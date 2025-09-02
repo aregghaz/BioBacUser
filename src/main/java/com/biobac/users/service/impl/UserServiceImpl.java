@@ -13,12 +13,7 @@ import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.RoleRepository;
 import com.biobac.users.repository.UserRepository;
-import com.biobac.users.request.ChangePasswordRequest;
-import com.biobac.users.request.FilterCriteria;
-import com.biobac.users.request.PermissionRequest;
-import com.biobac.users.request.RoleRequest;
-import com.biobac.users.request.UserRegisterRequest;
-import com.biobac.users.request.UserUpdateRequest;
+import com.biobac.users.request.*;
 import com.biobac.users.response.UserSingleResponse;
 import com.biobac.users.service.UserService;
 import com.biobac.users.utils.specifications.UserSpecification;
@@ -262,7 +257,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void editUserRoles(Long userId, List<Integer> roles) {
-        if(roles == null || roles.isEmpty()) {
+        if (roles == null || roles.isEmpty()) {
             throw new IllegalArgumentException("Roles list cannot be null or empty");
         }
         User user = userRepository.findById(userId)
@@ -278,6 +273,79 @@ public class UserServiceImpl implements UserService {
         }
         user.setRoles(managedRoles);
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public UserSingleResponse updateUser(Long userId, UserUpdateRequest updateRequest) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+
+        if (updateRequest.getEmail() != null && !updateRequest.getEmail().equalsIgnoreCase(user.getEmail())) {
+            userRepository.findByEmail(updateRequest.getEmail())
+                    .filter(found -> !found.getId().equals(userId))
+                    .ifPresent(found -> {
+                        throw new DuplicateException("Email already exists: " + updateRequest.getEmail());
+                    });
+            user.setEmail(updateRequest.getEmail());
+        }
+
+        if (updateRequest.getPhoneNumber() != null) {
+            user.setPhoneNumber(updateRequest.getPhoneNumber());
+        }
+        if (updateRequest.getFirstname() != null) {
+            user.setFirstname(updateRequest.getFirstname());
+        }
+        if (updateRequest.getLastname() != null) {
+            user.setLastname(updateRequest.getLastname());
+        }
+
+        userRepository.save(user);
+        return toSingleResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is missing");
+        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
+
+        if (user.getPassword() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be changed for this account");
+        }
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password is incorrect");
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from the old password");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    private UserRolesPermissionsDto toDto(User user) {
+        List<RolePermissionsDto> roles = user.getRoles() == null ? List.of() :
+                user.getRoles().stream()
+                        .map(role -> {
+                            List<PermissionDto> permissions = role.getPermissions() == null ? List.of() :
+                                    role.getPermissions().stream()
+                                            .filter(p -> p != null && p.getName() != null)
+                                            .map(p -> new PermissionDto(p.getName()))
+                                            .sorted((p1, p2) -> p1.getPermissionName().compareToIgnoreCase(p2.getPermissionName()))
+                                            .collect(Collectors.toList());
+                            return new RolePermissionsDto(role.getName(), permissions);
+                        })
+                        .sorted((r1, r2) -> r1.getRoleName().compareToIgnoreCase(r2.getRoleName()))
+                        .collect(Collectors.toList());
+
+        return new UserRolesPermissionsDto(
+                user.getId(),
+                user.getUsername(),
+                roles
+        );
     }
 
     private UserSingleResponse toSingleResponse(User user) {
@@ -306,85 +374,9 @@ public class UserServiceImpl implements UserService {
                 user.getPhoneNumber(),
                 user.getEmail(),
                 user.getActive(),
-                roles
+                roles,
+                user.getCreatedAt(),
+                user.getUpdatedAt()
         );
-    }
-
-    @Override
-    @Transactional
-    public UserSingleResponse updateUser(Long userId, UserUpdateRequest updateRequest) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
-
-        if (updateRequest.getUsername() != null && !updateRequest.getUsername().equalsIgnoreCase(user.getUsername())) {
-            userRepository.findByUsername(updateRequest.getUsername())
-                    .filter(found -> !found.getId().equals(userId))
-                    .ifPresent(found -> { throw new DuplicateException("Username already exists: " + updateRequest.getUsername()); });
-            user.setUsername(updateRequest.getUsername());
-        }
-
-        if (updateRequest.getEmail() != null && !updateRequest.getEmail().equalsIgnoreCase(user.getEmail())) {
-            userRepository.findByEmail(updateRequest.getEmail())
-                    .filter(found -> !found.getId().equals(userId))
-                    .ifPresent(found -> { throw new DuplicateException("Email already exists: " + updateRequest.getEmail()); });
-            user.setEmail(updateRequest.getEmail());
-        }
-
-        if (updateRequest.getPhoneNumber() != null) {
-            user.setPhoneNumber(updateRequest.getPhoneNumber());
-        }
-        if (updateRequest.getFirstname() != null) {
-            user.setFirstname(updateRequest.getFirstname());
-        }
-        if (updateRequest.getLastname() != null) {
-            user.setLastname(updateRequest.getLastname());
-        }
-
-        userRepository.save(user);
-        return toSingleResponse(user);
-    }
-
-    private UserRolesPermissionsDto toDto(User user) {
-        List<RolePermissionsDto> roles = user.getRoles() == null ? List.of() :
-                user.getRoles().stream()
-                        .map(role -> {
-                            List<PermissionDto> permissions = role.getPermissions() == null ? List.of() :
-                                    role.getPermissions().stream()
-                                            .filter(p -> p != null && p.getName() != null)
-                                            .map(p -> new PermissionDto(p.getName()))
-                                            .sorted((p1, p2) -> p1.getPermissionName().compareToIgnoreCase(p2.getPermissionName()))
-                                            .collect(Collectors.toList());
-                            return new RolePermissionsDto(role.getName(), permissions);
-                        })
-                        .sorted((r1, r2) -> r1.getRoleName().compareToIgnoreCase(r2.getRoleName()))
-                        .collect(Collectors.toList());
-
-        return new UserRolesPermissionsDto(
-                user.getId(),
-                user.getUsername(),
-                roles
-        );
-    }
-
-    @Override
-    @Transactional
-    public void changePassword(String username, ChangePasswordRequest request) {
-        if (request == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is missing");
-        }
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
-
-        if (user.getPassword() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be changed for this account");
-        }
-        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password is incorrect");
-        }
-        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from the old password");
-        }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
     }
 }
