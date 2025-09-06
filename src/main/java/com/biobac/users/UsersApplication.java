@@ -123,12 +123,12 @@ public class UsersApplication {
             User adminUser = userRepository.findByUsername("string").orElse(null);
             if (adminUser == null) {
                 adminUser = new User();
-                adminUser.setUsername("adminuser");
+                adminUser.setUsername("biobacadmin@admin.com");
                 adminUser.setFirstname("JOHNY");
                 adminUser.setLastname("SILVERHAND");
                 adminUser.setPhoneNumber("1231231234");
-                adminUser.setEmail("test@gmail.com");
-                adminUser.setPassword(passwordEncoder.encode("adminuser"));
+                adminUser.setEmail("biobacadmin@admin.com");
+                adminUser.setPassword(passwordEncoder.encode("password"));
                 adminUser.setActive(true);
                 adminUser.setRoles(new HashSet<>());
             }

@@ -14,7 +14,5 @@ public class Permission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    // e.g., USER_READ, USER_CREATE, USER_UPDATE, USER_DELETE
     private String name;
 }

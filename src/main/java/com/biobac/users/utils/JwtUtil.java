@@ -68,7 +68,7 @@ public class JwtUtil {
             if (!perms.isEmpty()) claims.put("perms", perms);
         }
         Date now = new Date();
-        Date exp = new Date(now.getTime() + 180000);
+        Date exp = new Date(now.getTime() + jwtExpirationMs);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getUsername())

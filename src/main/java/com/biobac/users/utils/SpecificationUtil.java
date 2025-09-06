@@ -1,5 +1,6 @@
 package com.biobac.users.utils;
 
+import com.biobac.warehouse.utils.DateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -8,16 +9,20 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
 
 public class SpecificationUtil {
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateUtil.DATE_FORMAT);
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(com.biobac.warehouse.utils.DateUtil.TIME_FORMAT);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(com.biobac.warehouse.utils.DateUtil.DATE_FORMAT);
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DateUtil.DATE_TIME_FORMAT);
 
     public static Predicate buildEquals(CriteriaBuilder cb, Path<?> path, Object value) {
         if (Number.class.isAssignableFrom(path.getJavaType())) {
             return cb.equal(path.as(Number.class), Double.parseDouble(value.toString()));
+        } else if (Boolean.class.isAssignableFrom(path.getJavaType()) || boolean.class.isAssignableFrom(path.getJavaType())) {
+            Boolean bool = Boolean.parseBoolean(value.toString());
+            return cb.equal(path.as(Boolean.class), bool);
         } else if (LocalDate.class.isAssignableFrom(path.getJavaType())) {
             LocalDate date = LocalDate.parse(value.toString(), DATE_FORMATTER);
             return cb.equal(path.as(LocalDate.class), date);
@@ -35,6 +40,9 @@ public class SpecificationUtil {
     public static Predicate buildNotEquals(CriteriaBuilder cb, Path<?> path, Object value) {
         if (Number.class.isAssignableFrom(path.getJavaType())) {
             return cb.notEqual(path.as(Number.class), Double.parseDouble(value.toString()));
+        } else if (Boolean.class.isAssignableFrom(path.getJavaType()) || boolean.class.isAssignableFrom(path.getJavaType())) {
+            Boolean bool = Boolean.parseBoolean(value.toString());
+            return cb.notEqual(path.as(Boolean.class), bool);
         } else if (LocalDate.class.isAssignableFrom(path.getJavaType())) {
             LocalDate date = LocalDate.parse(value.toString(), DATE_FORMATTER);
             return cb.notEqual(path.as(LocalDate.class), date);
@@ -104,5 +112,16 @@ public class SpecificationUtil {
             return cb.between(path.as(LocalDateTime.class), startDateTime, endDateTime);
         }
         return null;
+    }
+
+    public static Predicate buildContains(CriteriaBuilder cb, Path<?> path, Object value) {
+        if (value == null) return null;
+
+        if (value instanceof Collection<?>) {
+            return path.in((Collection<?>) value);
+        } else {
+            String pattern = "%" + value.toString().toLowerCase().trim().replaceAll("\\s+", " ") + "%";
+            return cb.like(cb.lower(path.as(String.class)), pattern);
+        }
     }
 }

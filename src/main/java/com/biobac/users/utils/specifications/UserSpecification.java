@@ -4,7 +4,6 @@ import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Role;
 import com.biobac.users.entity.User;
 import com.biobac.users.request.FilterCriteria;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -44,18 +43,7 @@ public class UserSpecification {
                     switch (criteria.getOperator()) {
                         case "equals" -> predicate = buildEquals(cb, path, criteria.getValue());
                         case "notEquals" -> predicate = buildNotEquals(cb, path, criteria.getValue());
-                        case "contains" -> {
-                            if (criteria.getValue() instanceof Iterable<?>) {
-                                CriteriaBuilder.In<Object> inClause = cb.in(path);
-                                for (Object val : (Iterable<?>) criteria.getValue()) {
-                                    inClause.value(val);
-                                }
-                                predicate = inClause;
-                            } else {
-                                predicate = cb.like(cb.lower(path.as(String.class)),
-                                        criteria.getValue().toString().toLowerCase().trim().replaceAll("\\s+", " "));
-                            }
-                        }
+                        case "contains" -> predicate = buildContains(cb, path, criteria.getValue());
                         case "greaterThanOrEqualTo" ->
                                 predicate = buildGreaterThanOrEqualTo(cb, path, criteria.getValue());
                         case "lessThanOrEqualTo" -> predicate = buildLessThanOrEqualTo(cb, path, criteria.getValue());

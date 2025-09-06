@@ -333,10 +333,10 @@ public class UserServiceImpl implements UserService {
                             List<PermissionDto> permissions = role.getPermissions() == null ? List.of() :
                                     role.getPermissions().stream()
                                             .filter(p -> p != null && p.getName() != null)
-                                            .map(p -> new PermissionDto(p.getName()))
+                                            .map(p -> new PermissionDto(p.getName(), p.getId()))
                                             .sorted((p1, p2) -> p1.getPermissionName().compareToIgnoreCase(p2.getPermissionName()))
                                             .collect(Collectors.toList());
-                            return new RolePermissionsDto(role.getName(), permissions);
+                            return new RolePermissionsDto(role.getName(), role.getId(), permissions);
                         })
                         .sorted((r1, r2) -> r1.getRoleName().compareToIgnoreCase(r2.getRoleName()))
                         .collect(Collectors.toList());
@@ -358,10 +358,10 @@ public class UserServiceImpl implements UserService {
                             List<PermissionDto> permissions = role.getPermissions() == null ? List.of() :
                                     role.getPermissions().stream()
                                             .filter(p -> p != null && p.getName() != null)
-                                            .map(p -> new PermissionDto(p.getName()))
+                                            .map(p -> new PermissionDto(p.getName(), p.getId()))
                                             .sorted((p1, p2) -> p1.getPermissionName().compareToIgnoreCase(p2.getPermissionName()))
                                             .collect(Collectors.toList());
-                            return new RolePermissionsDto(role.getName(), permissions);
+                            return new RolePermissionsDto(role.getName(), role.getId(), permissions);
                         })
                         .sorted((r1, r2) -> r1.getRoleName().compareToIgnoreCase(r2.getRoleName()))
                         .collect(Collectors.toList());

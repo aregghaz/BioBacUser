@@ -31,9 +31,10 @@ public class RolePermissionServiceImpl implements RolePermissionService {
         return roles.stream()
                 .map(role -> new RolePermissionsDto(
                         role.getName(),
+                        role.getId(),
                         role.getPermissions() == null ? List.of() : role.getPermissions().stream()
                                 .filter(p -> p != null && p.getName() != null)
-                                .map(p -> new PermissionDto(p.getName()))
+                                .map(p -> new PermissionDto(p.getName(), p.getId()))
                                 .sorted((p1, p2) -> p1.getPermissionName().compareToIgnoreCase(p2.getPermissionName()))
                                 .collect(Collectors.toList())
                 ))
