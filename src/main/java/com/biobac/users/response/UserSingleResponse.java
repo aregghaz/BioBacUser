@@ -1,19 +1,18 @@
 package com.biobac.users.response;
 
-import com.biobac.users.dto.RolePermissionsDto;
+import com.biobac.users.dto.PermissionDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class UserSingleResponse {
+public class UserSingleResponse extends AuditableResponse {
     private Long id;
     private String username;
     private String firstname;
@@ -21,7 +20,7 @@ public class UserSingleResponse {
     private String phoneNumber;
     private String email;
     private Boolean active;
-    private List<RolePermissionsDto> rolesPermissions;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Long positionId;
+    private String positionName;
+    private List<PermissionDto> permissions;
 }

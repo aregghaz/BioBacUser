@@ -9,7 +9,7 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
-public class Role {
+public class Position {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,8 +18,8 @@ public class Role {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "role_permissions",
-            joinColumns = @JoinColumn(name = "role_id"),
+            name = "position_permissions",
+            joinColumns = @JoinColumn(name = "position_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     private Set<Permission> permissions;

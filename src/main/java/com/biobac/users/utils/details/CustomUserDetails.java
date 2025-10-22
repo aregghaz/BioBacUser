@@ -1,7 +1,6 @@
 package com.biobac.users.utils.details;
 
 import com.biobac.users.entity.Permission;
-import com.biobac.users.entity.Role;
 import com.biobac.users.entity.User;
 import lombok.RequiredArgsConstructor;
 
@@ -21,25 +20,13 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
-        if (user.getRoles() != null) {
-            // Add role authorities
+        if (user.getPermissions() != null) {
             authorities.addAll(
-                    user.getRoles().stream()
-                            .map(Role::getName)
+                    user.getPermissions().stream()
+                            .map(Permission::getName)
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toSet())
             );
-            // Add permission authorities from roles
-            user.getRoles().forEach(role -> {
-                if (role.getPermissions() != null) {
-                    authorities.addAll(
-                            role.getPermissions().stream()
-                                    .map(Permission::getName)
-                                    .map(SimpleGrantedAuthority::new)
-                                    .collect(Collectors.toSet())
-                    );
-                }
-            });
         }
         return authorities;
     }

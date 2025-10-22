@@ -21,7 +21,6 @@ public class UserController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('USER_UPDATE')")
     @PutMapping("/{userId}")
     public ApiResponse<UserSingleResponse> updateUser(
             @PathVariable Long userId,
@@ -30,7 +29,6 @@ public class UserController {
         return ResponseUtil.success("User updated successfully", updated);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public ApiResponse<String> changePassword(@Valid @RequestBody ChangePasswordRequest request,
                                               HttpServletRequest httpRequest) {

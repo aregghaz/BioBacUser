@@ -120,7 +120,7 @@ public class UsersApplication {
             }
 
             // ===== DEFAULT ADMIN USER SEEDING =====
-            User adminUser = userRepository.findByUsername("string").orElse(null);
+            User adminUser = userRepository.findByUsername("biobacadmin@admin.com").orElse(null);
             if (adminUser == null) {
                 adminUser = new User();
                 adminUser.setUsername("biobacadmin@admin.com");
@@ -130,12 +130,8 @@ public class UsersApplication {
                 adminUser.setEmail("biobacadmin@admin.com");
                 adminUser.setPassword(passwordEncoder.encode("password"));
                 adminUser.setActive(true);
-                adminUser.setRoles(new HashSet<>());
             }
-            if (adminUser.getRoles() == null) {
-                adminUser.setRoles(new HashSet<>());
-            }
-            adminUser.getRoles().add(globalAdmin);
+            adminUser.setPermissions(allPermissions);
             userRepository.save(adminUser);
         };
     }

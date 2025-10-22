@@ -1,7 +1,6 @@
 package com.biobac.users.utils;
 
 import com.biobac.users.entity.Permission;
-import com.biobac.users.entity.Role;
 import com.biobac.users.entity.User;
 import com.biobac.users.exception.InvalidTokenException;
 import com.biobac.users.exception.TokenExpiredException;
@@ -51,22 +50,17 @@ public class JwtUtil {
 
     public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        if (user.getRoles() != null) {
-            List<String> roles = user.getRoles().stream()
-                    .map(Role::getName)
-                    .collect(Collectors.toList());
-            claims.put("roles", roles);
-            // Also add permissions derived from roles
-            Set<String> perms = new HashSet<>();
-            user.getRoles().forEach(role -> {
-                if (role.getPermissions() != null) {
-                    perms.addAll(role.getPermissions().stream()
-                            .map(Permission::getName)
-                            .collect(Collectors.toSet()));
-                }
-            });
-            if (!perms.isEmpty()) claims.put("perms", perms);
+
+        claims.put("userId", user.getId());
+
+        Set<String> perms = new HashSet<>();
+        if (user.getPermissions() != null) {
+            perms.addAll(user.getPermissions().stream()
+                    .map(Permission::getName)
+                    .collect(Collectors.toSet()));
         }
+        if (!perms.isEmpty()) claims.put("perms", perms);
+
         Date now = new Date();
         Date exp = new Date(now.getTime() + jwtExpirationMs);
         return Jwts.builder()

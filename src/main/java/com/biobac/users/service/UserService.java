@@ -1,10 +1,9 @@
 package com.biobac.users.service;
 
 import com.biobac.users.dto.PaginationMetadata;
-import com.biobac.users.dto.UserRolesPermissionsDto;
 import com.biobac.users.request.ChangePasswordRequest;
 import com.biobac.users.request.FilterCriteria;
-import com.biobac.users.request.UserRegisterRequest;
+import com.biobac.users.request.UserCreateRequest;
 import com.biobac.users.request.UserUpdateRequest;
 import com.biobac.users.response.UserSingleResponse;
 import org.springframework.data.util.Pair;
@@ -16,33 +15,21 @@ import java.util.Map;
 
 public interface UserService {
     @Transactional
-    void userRegister(UserRegisterRequest user);
+    UserSingleResponse createUser(UserCreateRequest request);
 
     UserDetails loadUserByUsername(String username);
-
-    @Transactional(readOnly = true)
-    List<UserRolesPermissionsDto> listUsersWithRolesAndPermissions();
-
-    @Transactional(readOnly = true)
-    UserRolesPermissionsDto getUserWithRolesAndPermission(Long userId);
-
-    @Transactional
-    void assignRoleToUser(Long userId, String roleName);
-
-    @Transactional
-    void removeRoleFromUser(Long userId, String roleName);
-
-    @Transactional
-    void assignPermissionToRole(String roleName, String permissionName);
 
     @Transactional(readOnly = true)
     UserSingleResponse getUserByUsername(String username);
 
     @Transactional(readOnly = true)
-    Pair<List<UserSingleResponse>, PaginationMetadata> listUsersWithRolesAndPermissionsPaginated(Map<String, FilterCriteria> filters, int page, int size, String sortBy, String sortDir);
+    UserSingleResponse getById(Long id);
 
-    @Transactional
-    void editUserRoles(Long userId, List<Integer> roles);
+    @Transactional(readOnly = true)
+    List<UserSingleResponse> listAllUsers();
+
+    @Transactional(readOnly = true)
+    Pair<List<UserSingleResponse>, PaginationMetadata> listUsersPaginated(Map<String, FilterCriteria> filters, int page, int size, String sortBy, String sortDir);
 
     @Transactional
     UserSingleResponse updateUser(Long userId, UserUpdateRequest updateRequest);
