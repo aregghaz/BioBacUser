@@ -40,7 +40,7 @@ public class PositionServiceImpl implements PositionService {
     public PositionResponse getById(Long id) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Position not found with id: " + id));
-        return toResponse(position);
+        return positionMapper.toResponse(position);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class PositionServiceImpl implements PositionService {
             position.setPermissions(new HashSet<>());
         }
         Position saved = positionRepository.save(position);
-        return toResponse(saved);
+        return positionMapper.toResponse(saved);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class PositionServiceImpl implements PositionService {
             position.setPermissions(perms);
         }
         Position saved = positionRepository.save(position);
-        return toResponse(saved);
+        return positionMapper.toResponse(saved);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class PositionServiceImpl implements PositionService {
     @Transactional(readOnly = true)
     public List<PositionResponse> getAll() {
         return positionRepository.findAll().stream()
-                .map(this::toResponse)
+                .map(positionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -101,7 +101,7 @@ public class PositionServiceImpl implements PositionService {
         Page<Position> positionPage = positionRepository.findAll(spec, pageable);
 
         List<PositionResponse> content = positionPage.getContent().stream()
-                .map(this::toResponse)
+                .map(positionMapper::toResponse)
                 .collect(Collectors.toList());
 
         PaginationMetadata metadata = new PaginationMetadata(

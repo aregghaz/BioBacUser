@@ -6,9 +6,13 @@ import com.biobac.users.response.PositionResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+import java.util.List;
+
+@Mapper(componentModel = "spring", uses = {PermissionMapper.class})
 public interface PositionMapper {
     PositionResponse toResponse(Position entity);
+
+    List<PositionResponse> toResponseList(List<Position> entities);
 
     Position toEntity(PositionRequest request);
 

@@ -3,14 +3,13 @@ package com.biobac.users.controller;
 import com.biobac.users.request.ChangePasswordRequest;
 import com.biobac.users.request.UserUpdateRequest;
 import com.biobac.users.response.ApiResponse;
-import com.biobac.users.response.UserSingleResponse;
+import com.biobac.users.response.UserResponse;
 import com.biobac.users.service.UserService;
 import com.biobac.users.utils.JwtUtil;
 import com.biobac.users.utils.ResponseUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,10 +21,10 @@ public class UserController {
     private final JwtUtil jwtUtil;
 
     @PutMapping("/{userId}")
-    public ApiResponse<UserSingleResponse> updateUser(
+    public ApiResponse<UserResponse> updateUser(
             @PathVariable Long userId,
             @Valid @RequestBody UserUpdateRequest updateRequest) {
-        UserSingleResponse updated = userService.updateUser(userId, updateRequest);
+        UserResponse updated = userService.updateUser(userId, updateRequest);
         return ResponseUtil.success("User updated successfully", updated);
     }
 

@@ -1,7 +1,7 @@
 package com.biobac.users.controller;
 
 import com.biobac.users.response.ApiResponse;
-import com.biobac.users.response.UserSingleResponse;
+import com.biobac.users.response.UserResponse;
 import com.biobac.users.service.UserService;
 import com.biobac.users.utils.JwtUtil;
 import com.biobac.users.utils.ResponseUtil;
@@ -19,7 +19,7 @@ public class InfoController {
     private final JwtUtil jwtUtil;
 
     @GetMapping("/profile")
-    public ApiResponse<UserSingleResponse> getProfileInfo(HttpServletRequest request) {
+    public ApiResponse<UserResponse> getProfileInfo(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseUtil.error(
