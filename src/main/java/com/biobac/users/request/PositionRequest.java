@@ -9,6 +9,5 @@ import java.util.Set;
 @Setter
 public class PositionRequest {
     private String name;
-    // IDs of permissions to associate with this position
     private Set<Long> permissionIds;
 }

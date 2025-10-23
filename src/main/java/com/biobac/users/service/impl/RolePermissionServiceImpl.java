@@ -1,21 +1,20 @@
 package com.biobac.users.service.impl;
 
-import com.biobac.users.dto.PermissionDto;
 import com.biobac.users.dto.RolePermissionsDto;
 import com.biobac.users.dto.SelectResponse;
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Role;
 import com.biobac.users.exception.NotFoundException;
+import com.biobac.users.mapper.PermissionMapper;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.RoleRepository;
+import com.biobac.users.response.PermissionResponse;
 import com.biobac.users.service.RolePermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +22,45 @@ import java.util.stream.Collectors;
 public class RolePermissionServiceImpl implements RolePermissionService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final PermissionMapper permissionMapper;
+
+    private static final Map<String, String> entityRuMap = Map.ofEntries(
+            Map.entry("USER", "Пользователь"),
+            Map.entry("WAREHOUSE", "Склад"),
+            Map.entry("PRODUCT", "Продукт"),
+            Map.entry("INGREDIENT", "Ингредиент"),
+            Map.entry("INGREDIENT_GROUP", "Группа ингредиентов"),
+            Map.entry("RECIPE_COMPONENT", "Компонент рецепта"),
+            Map.entry("RECIPE_ITEM", "Пункт рецепта"),
+            Map.entry("PRODUCT_HISTORY", "История продукта"),
+            Map.entry("INGREDIENT_HISTORY", "История ингредиента"),
+            Map.entry("UNIT", "Единица измерения"),
+            Map.entry("UNIT_TYPE", "Тип единицы"),
+            Map.entry("POSITION", "Должность"),
+            Map.entry("PERMISSION", "Разрешение"),
+            Map.entry("COMPANY", "Компания"),
+            Map.entry("ATTRIBUTE", "Атрибут"),
+            Map.entry("ATTRIBUTE_GROUP", "Группа атрибутов"),
+            Map.entry("COMPANY_TYPE", "Тип компании"),
+            Map.entry("REGION", "Регион"),
+            Map.entry("COMPANY_SALE_TYPE", "Тип продаж компании"),
+            Map.entry("ASSET", "Актив"),
+            Map.entry("ASSET_CATEGORY", "Категория актива"),
+            Map.entry("ASSET_IMPROVEMENT", "Улучшение актива"),
+            Map.entry("DEPARTMENT", "Отдел"),
+            Map.entry("DEPRECIATION_RECORD", "Запись амортизации"),
+            Map.entry("EXPENSE_TYPE", "Тип расхода"),
+            Map.entry("INGREDIENT_BALANCE", "Баланс ингредиентов"),
+            Map.entry("INGREDIENT_DETAIL", "Деталь ингредиента"),
+            Map.entry("MANUFACTURE_PRODUCT", "Производимый продукт"),
+            Map.entry("PRODUCT_BALANCE", "Баланс продукта"),
+            Map.entry("PRODUCT_DETAIL", "Деталь продукта"),
+            Map.entry("PRODUCT_GROUP", "Группа продуктов"),
+            Map.entry("RECEIVE_EXPENSE", "Полученный расход"),
+            Map.entry("RECEIVE_INGREDIENT", "Полученный ингредиент"),
+            Map.entry("WAREHOUSE_GROUP", "Группа складов"),
+            Map.entry("WAREHOUSE_TYPE", "Тип склада")
+    );
 
     @Override
     @Transactional(readOnly = true)
@@ -34,9 +72,7 @@ public class RolePermissionServiceImpl implements RolePermissionService {
                         role.getId(),
                         role.getPermissions() == null ? List.of() : role.getPermissions().stream()
                                 .filter(p -> p != null && p.getName() != null)
-                                .map(p -> new PermissionDto(p.getName(), p.getId()))
-                                .sorted((p1, p2) -> p1.getPermissionName().compareToIgnoreCase(p2.getPermissionName()))
-                                .collect(Collectors.toList())
+                                .map(permissionMapper::toResponse).toList()
                 ))
                 .sorted((a, b) -> a.getRoleName().compareToIgnoreCase(b.getRoleName()))
                 .collect(Collectors.toList());
@@ -62,7 +98,6 @@ public class RolePermissionServiceImpl implements RolePermissionService {
         roleRepository.save(role);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<SelectResponse> getAllRoles() {
@@ -83,5 +118,59 @@ public class RolePermissionServiceImpl implements RolePermissionService {
                         .name(permission.getName())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, List<PermissionResponse>> getGroupPermissions() {
+        List<PermissionResponse> permissionResponses = permissionRepository.findAll().stream()
+                .map(permissionMapper::toResponse)
+                .toList();
+
+        Map<String, List<PermissionResponse>> grouped = permissionResponses.stream()
+                .collect(Collectors.groupingBy(p -> {
+                    if (p.getTitle() != null && !p.getTitle().trim().isEmpty()) {
+                        String t = p.getTitle().trim();
+                        int spaceIdx = t.indexOf(' ');
+                        if (spaceIdx > 0 && spaceIdx < t.length() - 1) {
+                            return t.substring(spaceIdx + 1).trim();
+                        }
+                        return t;
+                    }
+
+                    String name = p.getName() == null ? "" : p.getName();
+                    String[] parts = name.split("_");
+                    if (parts.length == 0) {
+                        return "Прочее";
+                    }
+
+                    Set<String> opPrefixes = Set.of("READ", "CREATE", "UPDATE", "DELETE", "VIEW", "LIST", "GET", "SET", "EDIT", "ADD", "REMOVE", "MANAGE", "ASSIGN", "EXPORT", "IMPORT", "APPROVE", "REJECT");
+                    int start = (opPrefixes.contains(parts[0].toUpperCase(Locale.ROOT)) && parts.length > 1) ? 1 : 0;
+
+                    String entityKey = parts[start].toUpperCase(Locale.ROOT);
+                    if (start + 2 < parts.length) {
+                        String three = (parts[start] + "_" + parts[start + 1] + "_" + parts[start + 2]).toUpperCase(Locale.ROOT);
+                        if (entityRuMap.containsKey(three)) {
+                            entityKey = three;
+                        }
+                    }
+                    if (start + 1 < parts.length) {
+                        String two = (parts[start] + "_" + parts[start + 1]).toUpperCase(Locale.ROOT);
+                        if (entityRuMap.containsKey(two)) {
+                            entityKey = two;
+                        }
+                    }
+
+                    return entityRuMap.getOrDefault(entityKey, entityKey);
+                }));
+
+        return grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        LinkedHashMap::new
+                ));
     }
 }

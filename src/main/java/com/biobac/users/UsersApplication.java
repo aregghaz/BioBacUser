@@ -12,9 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
@@ -27,27 +25,73 @@ public class UsersApplication {
     @Bean
     CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            // Define entities in the system
-            List<String> entities = List.of(
-                    "USER", "WAREHOUSE", "PRODUCT", "INGREDIENT",
-                    "INGREDIENT_GROUP", "RECIPE_COMPONENT", "RECIPE_ITEM", "INVENTORY_ITEM",
-                    "PRODUCT_HISTORY", "INGREDIENT_HISTORY", "UNIT", "UNIT_TYPE"
+            Map<String, String> entityRuMap = Map.ofEntries(
+                    Map.entry("USER", "Пользователь"),
+                    Map.entry("WAREHOUSE", "Склад"),
+                    Map.entry("PRODUCT", "Продукт"),
+                    Map.entry("INGREDIENT", "Ингредиент"),
+                    Map.entry("INGREDIENT_GROUP", "Группа ингредиентов"),
+                    Map.entry("RECIPE_ITEM", "Рецепт"),
+                    Map.entry("PRODUCT_HISTORY", "История продукта"),
+                    Map.entry("INGREDIENT_HISTORY", "История ингредиента"),
+                    Map.entry("UNIT", "Единица измерения"),
+                    Map.entry("UNIT_TYPE", "Тип единицы"),
+                    Map.entry("POSITION", "Должность"),
+                    Map.entry("PERMISSION", "Разрешение"),
+                    Map.entry("COMPANY", "Компания"),
+                    Map.entry("ATTRIBUTE", "Атрибут"),
+                    Map.entry("ATTRIBUTE_GROUP", "Группа атрибутов"),
+                    Map.entry("COMPANY_TYPE", "Тип компании"),
+                    Map.entry("REGION", "Регион"),
+                    Map.entry("COMPANY_SALE_TYPE", "Тип продаж компании"),
+                    Map.entry("ASSET", "Актив"),
+                    Map.entry("ASSET_CATEGORY", "Категория актива"),
+                    Map.entry("ASSET_IMPROVEMENT", "Улучшение актива"),
+                    Map.entry("DEPARTMENT", "Отдел"),
+                    Map.entry("DEPRECIATION_RECORD", "Запись амортизации"),
+                    Map.entry("EXPENSE_TYPE", "Тип расхода"),
+                    Map.entry("INGREDIENT_BALANCE", "Баланс ингредиентов"),
+                    Map.entry("INGREDIENT_DETAIL", "Деталь ингредиента"),
+                    Map.entry("MANUFACTURE_PRODUCT", "Производимый продукт"),
+                    Map.entry("PRODUCT_BALANCE", "Баланс продукта"),
+                    Map.entry("PRODUCT_DETAIL", "Деталь продукта"),
+                    Map.entry("PRODUCT_GROUP", "Группа продуктов"),
+                    Map.entry("RECEIVE_EXPENSE", "Полученный расход"),
+                    Map.entry("RECEIVE_INGREDIENT", "Полученный ингредиент"),
+                    Map.entry("WAREHOUSE_GROUP", "Группа складов"),
+                    Map.entry("WAREHOUSE_TYPE", "Тип склада")
             );
 
-            // Define operations
+            Map<String, String> operationRuMap = Map.of(
+                    "READ", "Просмотр",
+                    "CREATE", "Создание",
+                    "UPDATE", "Редактирование",
+                    "DELETE", "Удаление"
+            );
+
+            List<String> entities = new ArrayList<>(entityRuMap.keySet());
             List<String> operations = List.of("READ", "CREATE", "UPDATE", "DELETE");
 
-            // Ensure all permissions exist
             Set<Permission> allPermissions = new HashSet<>();
             for (String entity : entities) {
                 for (String op : operations) {
                     String permName = entity + "_" + op;
+                    String title = operationRuMap.get(op) + " " + entityRuMap.getOrDefault(entity, entity);
+
                     Permission p = permissionRepository.findByName(permName)
                             .orElseGet(() -> {
                                 Permission np = new Permission();
                                 np.setName(permName);
+                                np.setTitle(title);
                                 return permissionRepository.save(np);
                             });
+
+                    // Update title if missing or outdated
+                    if (p.getTitle() == null || !p.getTitle().equals(title)) {
+                        p.setTitle(title);
+                        permissionRepository.save(p);
+                    }
+
                     allPermissions.add(p);
                 }
             }

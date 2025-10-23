@@ -1,5 +1,6 @@
 package com.biobac.users.dto;
 
+import com.biobac.users.response.PermissionResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,5 +15,5 @@ import java.util.List;
 public class RolePermissionsDto {
     private String roleName;
     private Long roleId;
-    private List<PermissionDto> permissions;
+    private List<PermissionResponse> permissions;
 }

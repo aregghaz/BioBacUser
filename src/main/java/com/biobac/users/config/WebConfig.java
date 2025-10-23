@@ -1,6 +1,6 @@
 package com.biobac.users.config;
 
-import com.biobac.warehouse.utils.DateUtil;
+import com.biobac.users.utils.DateUtil;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

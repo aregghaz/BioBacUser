@@ -1,6 +1,5 @@
 package com.biobac.users.response;
 
-import com.biobac.users.dto.PermissionDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,5 +10,5 @@ import java.util.List;
 public class PositionResponse {
     private Long id;
     private String name;
-    private List<PermissionDto> permissions;
+    private List<PermissionResponse> permissions;
 }

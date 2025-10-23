@@ -47,13 +47,13 @@ public class PositionController {
         return ResponseUtil.success("Positions fetched successfully", positionService.getAll());
     }
 
-    @PostMapping("/pagination")
+    @PostMapping("/all")
     public ApiResponse<List<PositionResponse>> getPagination(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "id") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
-            @RequestBody(required = false) Map<String, FilterCriteria> filters) {
+            @RequestBody Map<String, FilterCriteria> filters) {
         Pair<List<PositionResponse>, PaginationMetadata> result = positionService.getPagination(filters, page, size, sortBy, sortDir);
         return ResponseUtil.success("Positions fetched successfully", result.getFirst(), result.getSecond());
     }

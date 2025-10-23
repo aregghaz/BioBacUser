@@ -1,15 +1,16 @@
 package com.biobac.users.service.impl;
 
 import com.biobac.users.dto.PaginationMetadata;
-import com.biobac.users.dto.PermissionDto;
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Position;
 import com.biobac.users.exception.NotFoundException;
+import com.biobac.users.mapper.PermissionMapper;
 import com.biobac.users.mapper.PositionMapper;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.PositionRepository;
 import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.request.PositionRequest;
+import com.biobac.users.response.PermissionResponse;
 import com.biobac.users.response.PositionResponse;
 import com.biobac.users.service.PositionService;
 import com.biobac.users.utils.specifications.PositionSpecification;
@@ -23,11 +24,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +33,7 @@ public class PositionServiceImpl implements PositionService {
     private final PositionRepository positionRepository;
     private final PositionMapper positionMapper;
     private final PermissionRepository permissionRepository;
+    private final PermissionMapper permissionMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -123,11 +121,14 @@ public class PositionServiceImpl implements PositionService {
 
     private PositionResponse toResponse(Position entity) {
         if (entity == null) return null;
+
         PositionResponse response = positionMapper.toResponse(entity);
-        List<PermissionDto> perms = entity.getPermissions() == null ? new ArrayList<>() : entity.getPermissions().stream()
-                .map(p -> new PermissionDto(p.getName(), p.getId()))
-                .sorted((a, b) -> a.getPermissionName().compareToIgnoreCase(b.getPermissionName()))
-                .collect(Collectors.toList());
+
+        List<PermissionResponse> perms = (entity.getPermissions() == null)
+                ? new ArrayList<>()
+                : entity.getPermissions().stream()
+                .map(permissionMapper::toResponse).toList();
+
         response.setPermissions(perms);
         return response;
     }

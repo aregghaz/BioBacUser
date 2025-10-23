@@ -3,6 +3,7 @@ package com.biobac.users.request;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 @Getter
@@ -14,6 +15,7 @@ public class UserCreateRequest {
     private String phoneNumber;
     private String email;
     private String password;
+    private LocalDate dob;
     private Long positionId;
     private Set<Long> permissionIds;
 }

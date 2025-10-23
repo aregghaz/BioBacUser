@@ -1,6 +1,5 @@
 package com.biobac.users.utils;
 
-import com.biobac.warehouse.utils.DateUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -13,8 +12,8 @@ import java.util.Collection;
 import java.util.List;
 
 public class SpecificationUtil {
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(com.biobac.warehouse.utils.DateUtil.TIME_FORMAT);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(com.biobac.warehouse.utils.DateUtil.DATE_FORMAT);
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateUtil.DATE_FORMAT);
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DateUtil.DATE_TIME_FORMAT);
 
     public static Predicate buildEquals(CriteriaBuilder cb, Path<?> path, Object value) {

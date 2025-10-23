@@ -1,12 +1,12 @@
 package com.biobac.users.service.impl;
 
 import com.biobac.users.dto.PaginationMetadata;
-import com.biobac.users.dto.PermissionDto;
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Position;
 import com.biobac.users.entity.User;
 import com.biobac.users.exception.DuplicateException;
 import com.biobac.users.exception.NotFoundException;
+import com.biobac.users.mapper.PermissionMapper;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.PositionRepository;
 import com.biobac.users.repository.UserRepository;
@@ -14,6 +14,7 @@ import com.biobac.users.request.ChangePasswordRequest;
 import com.biobac.users.request.FilterCriteria;
 import com.biobac.users.request.UserCreateRequest;
 import com.biobac.users.request.UserUpdateRequest;
+import com.biobac.users.response.PermissionResponse;
 import com.biobac.users.response.UserSingleResponse;
 import com.biobac.users.service.UserService;
 import com.biobac.users.utils.specifications.UserSpecification;
@@ -34,10 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +45,7 @@ public class UserServiceImpl implements UserService {
     private final PermissionRepository permissionRepository;
     private final PositionRepository positionRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PermissionMapper permissionMapper;
 
     @Transactional
     @Override
@@ -63,12 +62,16 @@ public class UserServiceImpl implements UserService {
         Position position = positionRepository.findById(request.getPositionId())
                 .orElseThrow(() -> new NotFoundException("Position not found with id: " + request.getPositionId()));
 
-        Set<Permission> permissions;
-        if (request.getPermissionIds() != null && !request.getPermissionIds().isEmpty()) {
-            permissions = new HashSet<>(permissionRepository.findAllById(request.getPermissionIds()));
-        } else {
-            permissions = position.getPermissions() == null ? new HashSet<>() : new HashSet<>(position.getPermissions());
+        Set<Permission> permissions = new HashSet<>();
+
+        if (position.getPermissions() != null) {
+            permissions.addAll(position.getPermissions());
         }
+
+        if (request.getPermissionIds() != null && !request.getPermissionIds().isEmpty()) {
+            permissions.addAll(permissionRepository.findAllById(request.getPermissionIds()));
+        }
+
 
         User user = new User();
         user.setUsername(request.getUsername());
@@ -76,6 +79,7 @@ public class UserServiceImpl implements UserService {
         user.setLastname(request.getLastname());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setEmail(request.getEmail());
+        user.setDob(request.getDob());
         user.setActive(true);
         user.setPassword(request.getPassword() != null ? passwordEncoder.encode(request.getPassword()) : null);
         user.setPosition(position);
@@ -217,11 +221,10 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             return null;
         }
-        List<PermissionDto> permissions = user.getPermissions() == null ? List.of() : user.getPermissions().stream()
-                .filter(p -> p != null && p.getName() != null)
-                .map(p -> new PermissionDto(p.getName(), p.getId()))
-                .sorted((p1, p2) -> p1.getPermissionName().compareToIgnoreCase(p2.getPermissionName()))
-                .collect(Collectors.toList());
+        List<PermissionResponse> permissions = (user.getPermissions() == null)
+                ? new ArrayList<>()
+                : user.getPermissions().stream()
+                .map(permissionMapper::toResponse).toList();
 
         Long positionId = user.getPosition() != null ? user.getPosition().getId() : null;
         String positionName = user.getPosition() != null ? user.getPosition().getName() : null;
@@ -234,6 +237,7 @@ public class UserServiceImpl implements UserService {
                 user.getPhoneNumber(),
                 user.getEmail(),
                 user.getActive(),
+                user.getDob(),
                 positionId,
                 positionName,
                 permissions
