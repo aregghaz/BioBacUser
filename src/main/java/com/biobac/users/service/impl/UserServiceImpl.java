@@ -176,6 +176,9 @@ public class UserServiceImpl implements UserService {
         if (updateRequest.getLastname() != null) {
             user.setLastname(updateRequest.getLastname());
         }
+        if(updateRequest.getDob() != null) {
+            user.setDob(updateRequest.getDob());
+        }
 
         userRepository.save(user);
         return userMapper.toResponse(user);
