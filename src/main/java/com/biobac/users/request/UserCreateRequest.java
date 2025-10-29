@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -17,5 +16,4 @@ public class UserCreateRequest {
     private String password;
     private LocalDate dob;
     private Long positionId;
-    private Set<Long> permissionIds;
 }

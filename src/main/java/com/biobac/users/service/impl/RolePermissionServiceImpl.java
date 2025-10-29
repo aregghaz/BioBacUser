@@ -29,9 +29,10 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             Map.entry("WAREHOUSE", "Склад"),
             Map.entry("PRODUCT", "Продукт"),
             Map.entry("INGREDIENT", "Ингредиент"),
+            Map.entry("INGREDIENT_COMPLETED_DEAL", "Завершённая сделка"),
+            Map.entry("INGREDIENT_NOT_COMPLETED_DEAL", "Незавершённая сделка"),
             Map.entry("INGREDIENT_GROUP", "Группа ингредиентов"),
-            Map.entry("RECIPE_COMPONENT", "Компонент рецепта"),
-            Map.entry("RECIPE_ITEM", "Пункт рецепта"),
+            Map.entry("RECIPE_ITEM", "Рецепт"),
             Map.entry("PRODUCT_HISTORY", "История продукта"),
             Map.entry("INGREDIENT_HISTORY", "История ингредиента"),
             Map.entry("UNIT", "Единица измерения"),
@@ -42,12 +43,15 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             Map.entry("ATTRIBUTE", "Атрибут"),
             Map.entry("ATTRIBUTE_GROUP", "Группа атрибутов"),
             Map.entry("COMPANY_TYPE", "Тип компании"),
+            Map.entry("COMPANY_BUYER", "Покупатели"),
+            Map.entry("COMPANY_SELLER", "Поставщики"),
             Map.entry("REGION", "Регион"),
             Map.entry("COMPANY_SALE_TYPE", "Тип продаж компании"),
-            Map.entry("ASSET", "Актив"),
-            Map.entry("ASSET_CATEGORY", "Категория актива"),
-            Map.entry("ASSET_IMPROVEMENT", "Улучшение актива"),
+            Map.entry("ASSET", "Основные средства"),
+            Map.entry("ASSET_CATEGORY", "Категория Основные средства"),
+            Map.entry("ASSET_IMPROVEMENT", "Улучшение Основные средства"),
             Map.entry("DEPARTMENT", "Отдел"),
+            Map.entry("ACCOUNT","Аккаунт"),
             Map.entry("DEPRECIATION_RECORD", "Запись амортизации"),
             Map.entry("EXPENSE_TYPE", "Тип расхода"),
             Map.entry("INGREDIENT_BALANCE", "Баланс ингредиентов"),
@@ -56,8 +60,8 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             Map.entry("PRODUCT_BALANCE", "Баланс продукта"),
             Map.entry("PRODUCT_DETAIL", "Деталь продукта"),
             Map.entry("PRODUCT_GROUP", "Группа продуктов"),
-            Map.entry("RECEIVE_EXPENSE", "Полученный расход"),
-            Map.entry("RECEIVE_INGREDIENT", "Полученный ингредиент"),
+            Map.entry("RECEIVE_EXPENSE", "Расходы закупки"),
+            Map.entry("RECEIVE_INGREDIENT", "Постлупления ингредиента"),
             Map.entry("WAREHOUSE_GROUP", "Группа складов"),
             Map.entry("WAREHOUSE_TYPE", "Тип склада")
     );
@@ -127,8 +131,18 @@ public class RolePermissionServiceImpl implements RolePermissionService {
                 .map(permissionMapper::toResponse)
                 .toList();
 
+        Map<String, String> customPermissionGroupMap = Map.of(
+                "RECEIVE_INGREDIENT_STATUS_UPDATE", "Поступления ингредиента",
+                "INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки"
+        );
+
         Map<String, List<PermissionResponse>> grouped = permissionResponses.stream()
                 .collect(Collectors.groupingBy(p -> {
+                    if (p.getName() != null) {
+                        String customGroup = customPermissionGroupMap.get(p.getName());
+                        if (customGroup != null) return customGroup;
+                    }
+
                     if (p.getTitle() != null && !p.getTitle().trim().isEmpty()) {
                         String t = p.getTitle().trim();
                         int spaceIdx = t.indexOf(' ');
@@ -140,25 +154,19 @@ public class RolePermissionServiceImpl implements RolePermissionService {
 
                     String name = p.getName() == null ? "" : p.getName();
                     String[] parts = name.split("_");
-                    if (parts.length == 0) {
-                        return "Прочее";
-                    }
+                    if (parts.length == 0) return "Прочее";
 
-                    Set<String> opPrefixes = Set.of("READ", "CREATE", "UPDATE", "DELETE", "VIEW", "LIST", "GET", "SET", "EDIT", "ADD", "REMOVE", "MANAGE", "ASSIGN", "EXPORT", "IMPORT", "APPROVE", "REJECT");
+                    Set<String> opPrefixes = Set.of("READ", "CREATE", "UPDATE", "DELETE");
                     int start = (opPrefixes.contains(parts[0].toUpperCase(Locale.ROOT)) && parts.length > 1) ? 1 : 0;
 
                     String entityKey = parts[start].toUpperCase(Locale.ROOT);
                     if (start + 2 < parts.length) {
                         String three = (parts[start] + "_" + parts[start + 1] + "_" + parts[start + 2]).toUpperCase(Locale.ROOT);
-                        if (entityRuMap.containsKey(three)) {
-                            entityKey = three;
-                        }
+                        if (entityRuMap.containsKey(three)) entityKey = three;
                     }
                     if (start + 1 < parts.length) {
                         String two = (parts[start] + "_" + parts[start + 1]).toUpperCase(Locale.ROOT);
-                        if (entityRuMap.containsKey(two)) {
-                            entityKey = two;
-                        }
+                        if (entityRuMap.containsKey(two)) entityKey = two;
                     }
 
                     return entityRuMap.getOrDefault(entityKey, entityKey);
@@ -173,4 +181,5 @@ public class RolePermissionServiceImpl implements RolePermissionService {
                         LinkedHashMap::new
                 ));
     }
+
 }

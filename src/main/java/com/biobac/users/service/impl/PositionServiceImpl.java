@@ -3,6 +3,7 @@ package com.biobac.users.service.impl;
 import com.biobac.users.dto.PaginationMetadata;
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Position;
+import com.biobac.users.entity.User;
 import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.mapper.PermissionMapper;
 import com.biobac.users.mapper.PositionMapper;
@@ -63,12 +64,16 @@ public class PositionServiceImpl implements PositionService {
     public PositionResponse update(Long id, PositionRequest request) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Position not found with id: " + id));
+        List<User> users = position.getUsers();
         if (request.getName() != null) {
             position.setName(request.getName());
         }
         if (request.getPermissionIds() != null) {
             Set<Permission> perms = new HashSet<>(permissionRepository.findAllById(request.getPermissionIds()));
             position.setPermissions(perms);
+            users.forEach(u -> {
+                u.setPermissions(new HashSet<>(perms));
+            });
         }
         Position saved = positionRepository.save(position);
         return positionMapper.toResponse(saved);

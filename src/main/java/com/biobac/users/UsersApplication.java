@@ -1,9 +1,11 @@
 package com.biobac.users;
 
 import com.biobac.users.entity.Permission;
+import com.biobac.users.entity.Position;
 import com.biobac.users.entity.Role;
 import com.biobac.users.entity.User;
 import com.biobac.users.repository.PermissionRepository;
+import com.biobac.users.repository.PositionRepository;
 import com.biobac.users.repository.RoleRepository;
 import com.biobac.users.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -23,13 +25,15 @@ public class UsersApplication {
     }
 
     @Bean
-    CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository, UserRepository userRepository, PasswordEncoder passwordEncoder, PositionRepository positionRepository) {
         return args -> {
             Map<String, String> entityRuMap = Map.ofEntries(
                     Map.entry("USER", "Пользователь"),
                     Map.entry("WAREHOUSE", "Склад"),
                     Map.entry("PRODUCT", "Продукт"),
                     Map.entry("INGREDIENT", "Ингредиент"),
+                    Map.entry("INGREDIENT_COMPLETED_DEAL", "Завершённая сделка"),
+                    Map.entry("INGREDIENT_NOT_COMPLETED_DEAL", "Незавершённая сделка"),
                     Map.entry("INGREDIENT_GROUP", "Группа ингредиентов"),
                     Map.entry("RECIPE_ITEM", "Рецепт"),
                     Map.entry("PRODUCT_HISTORY", "История продукта"),
@@ -42,11 +46,13 @@ public class UsersApplication {
                     Map.entry("ATTRIBUTE", "Атрибут"),
                     Map.entry("ATTRIBUTE_GROUP", "Группа атрибутов"),
                     Map.entry("COMPANY_TYPE", "Тип компании"),
+                    Map.entry("COMPANY_BUYER", "Покупатели"),
+                    Map.entry("COMPANY_SELLER", "Поставщики"),
                     Map.entry("REGION", "Регион"),
                     Map.entry("COMPANY_SALE_TYPE", "Тип продаж компании"),
-                    Map.entry("ASSET", "Актив"),
-                    Map.entry("ASSET_CATEGORY", "Категория актива"),
-                    Map.entry("ASSET_IMPROVEMENT", "Улучшение актива"),
+                    Map.entry("ASSET", "Основные средства"),
+                    Map.entry("ASSET_CATEGORY", "Категория Основные средства"),
+                    Map.entry("ASSET_IMPROVEMENT", "Улучшение Основные средства"),
                     Map.entry("DEPARTMENT", "Отдел"),
                     Map.entry("DEPRECIATION_RECORD", "Запись амортизации"),
                     Map.entry("EXPENSE_TYPE", "Тип расхода"),
@@ -54,10 +60,11 @@ public class UsersApplication {
                     Map.entry("INGREDIENT_DETAIL", "Деталь ингредиента"),
                     Map.entry("MANUFACTURE_PRODUCT", "Производимый продукт"),
                     Map.entry("PRODUCT_BALANCE", "Баланс продукта"),
+                    Map.entry("ACCOUNT", "Аккаунт"),
                     Map.entry("PRODUCT_DETAIL", "Деталь продукта"),
                     Map.entry("PRODUCT_GROUP", "Группа продуктов"),
-                    Map.entry("RECEIVE_EXPENSE", "Полученный расход"),
-                    Map.entry("RECEIVE_INGREDIENT", "Полученный ингредиент"),
+                    Map.entry("RECEIVE_EXPENSE", "Раходы закупки"),
+                    Map.entry("RECEIVE_INGREDIENT", "Постлупления ингредиента"),
                     Map.entry("WAREHOUSE_GROUP", "Группа складов"),
                     Map.entry("WAREHOUSE_TYPE", "Тип склада")
             );
@@ -73,26 +80,54 @@ public class UsersApplication {
             List<String> operations = List.of("READ", "CREATE", "UPDATE", "DELETE");
 
             Set<Permission> allPermissions = new HashSet<>();
+
+            List<Map.Entry<String, String>> specialPermissions = List.of(
+                    Map.entry("RECEIVE_INGREDIENT_STATUS_UPDATE", "Изменение статуса поступления ингредиента"),
+                    Map.entry("INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки")
+            );
+
+            for (var entry : specialPermissions) {
+                String name = entry.getKey();
+                String title = entry.getValue();
+
+                Permission perm = permissionRepository.findByName(name)
+                        .orElseGet(() -> {
+                            Permission p = new Permission();
+                            p.setName(name);
+                            p.setTitle(title);
+                            return permissionRepository.save(p);
+                        });
+
+                // update title if needed
+                if (perm.getTitle() == null || !perm.getTitle().equals(title)) {
+                    perm.setTitle(title);
+                    permissionRepository.save(perm);
+                }
+
+                allPermissions.add(perm);
+            }
+
+// ✅ Create standard CRUD permissions
             for (String entity : entities) {
                 for (String op : operations) {
                     String permName = entity + "_" + op;
                     String title = operationRuMap.get(op) + " " + entityRuMap.getOrDefault(entity, entity);
 
-                    Permission p = permissionRepository.findByName(permName)
+                    Permission perm = permissionRepository.findByName(permName)
                             .orElseGet(() -> {
-                                Permission np = new Permission();
-                                np.setName(permName);
-                                np.setTitle(title);
-                                return permissionRepository.save(np);
+                                Permission p = new Permission();
+                                p.setName(permName);
+                                p.setTitle(title);
+                                return permissionRepository.save(p);
                             });
 
                     // Update title if missing or outdated
-                    if (p.getTitle() == null || !p.getTitle().equals(title)) {
-                        p.setTitle(title);
-                        permissionRepository.save(p);
+                    if (perm.getTitle() == null || !perm.getTitle().equals(title)) {
+                        perm.setTitle(title);
+                        permissionRepository.save(perm);
                     }
 
-                    allPermissions.add(p);
+                    allPermissions.add(perm);
                 }
             }
 
@@ -101,17 +136,15 @@ public class UsersApplication {
             Role superAdmin = roleRepository.findByName("ROLE_SUPER_ADMIN").orElseGet(() -> {
                 Role r = new Role();
                 r.setName("ROLE_SUPER_ADMIN");
-                r.setPermissions(new HashSet<>(allPermissions));
                 return roleRepository.save(r);
             });
             superAdmin.setPermissions(new HashSet<>(allPermissions));
             roleRepository.save(superAdmin);
 
-            // ADMIN -> all permissions (same as superAdmin for now, but can restrict later)
+            // ADMIN -> all permissions (same as super admin for now)
             Role globalAdmin = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
                 Role r = new Role();
                 r.setName("ROLE_ADMIN");
-                r.setPermissions(new HashSet<>(allPermissions));
                 return roleRepository.save(r);
             });
             globalAdmin.setPermissions(new HashSet<>(allPermissions));
@@ -119,7 +152,6 @@ public class UsersApplication {
 
             // ===== ENTITY-SPECIFIC ROLES =====
             for (String entity : entities) {
-                // Collect perms by operation
                 Set<Permission> entityAllPerms = allPermissions.stream()
                         .filter(p -> p.getName().startsWith(entity + "_"))
                         .collect(Collectors.toSet());
@@ -136,7 +168,6 @@ public class UsersApplication {
                 Role entityAdmin = roleRepository.findByName("ROLE_" + entity + "_ADMIN").orElseGet(() -> {
                     Role r = new Role();
                     r.setName("ROLE_" + entity + "_ADMIN");
-                    r.setPermissions(new HashSet<>(entityAllPerms));
                     return roleRepository.save(r);
                 });
                 entityAdmin.setPermissions(entityAllPerms);
@@ -146,7 +177,6 @@ public class UsersApplication {
                 Role entityManager = roleRepository.findByName("ROLE_" + entity + "_MANAGER").orElseGet(() -> {
                     Role r = new Role();
                     r.setName("ROLE_" + entity + "_MANAGER");
-                    r.setPermissions(new HashSet<>(entityManagerPerms));
                     return roleRepository.save(r);
                 });
                 entityManager.setPermissions(entityManagerPerms);
@@ -156,7 +186,6 @@ public class UsersApplication {
                 Role entityUser = roleRepository.findByName("ROLE_" + entity + "_USER").orElseGet(() -> {
                     Role r = new Role();
                     r.setName("ROLE_" + entity + "_USER");
-                    r.setPermissions(new HashSet<>(entityUserPerms));
                     return roleRepository.save(r);
                 });
                 entityUser.setPermissions(entityUserPerms);
@@ -175,7 +204,10 @@ public class UsersApplication {
                 adminUser.setPassword(passwordEncoder.encode("password"));
                 adminUser.setActive(true);
             }
-            adminUser.setPermissions(allPermissions);
+
+            // ✅ Give admin user all permissions (including special)
+            adminUser.setPermissions(new HashSet<>(allPermissions));
+
             userRepository.save(adminUser);
         };
     }

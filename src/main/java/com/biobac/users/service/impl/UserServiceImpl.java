@@ -58,12 +58,7 @@ public class UserServiceImpl implements UserService {
         Position position = positionRepository.findById(request.getPositionId())
                 .orElseThrow(() -> new NotFoundException("Position not found with id: " + request.getPositionId()));
 
-        Set<Permission> permissions = new HashSet<>();
-
-        if (request.getPermissionIds() != null && !request.getPermissionIds().isEmpty()) {
-            permissions.addAll(permissionRepository.findAllById(request.getPermissionIds()));
-        }
-
+        Set<Permission> permissions = new HashSet<>(position.getPermissions());
 
         User user = userMapper.toEntity(request);
         user.setActive(true);
@@ -176,7 +171,7 @@ public class UserServiceImpl implements UserService {
         if (updateRequest.getLastname() != null) {
             user.setLastname(updateRequest.getLastname());
         }
-        if(updateRequest.getDob() != null) {
+        if (updateRequest.getDob() != null) {
             user.setDob(updateRequest.getDob());
         }
 
@@ -192,10 +187,10 @@ public class UserServiceImpl implements UserService {
         Position position = positionRepository.findById(request.getPositionId())
                 .orElseThrow(() -> new NotFoundException("Position not found with id: " + request.getPositionId()));
 
-        Set<Permission> permissions = new HashSet<>();
+        Set<Permission> permissions = new HashSet<>(position.getPermissions());
 
-        if (request.getPermissionIds() != null && !request.getPermissionIds().isEmpty()) {
-            permissions.addAll(permissionRepository.findAllById(request.getPermissionIds()));
+        if (request.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         user.setUsername(request.getUsername());
@@ -205,7 +200,6 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.getEmail());
         user.setDob(request.getDob());
         user.setActive(true);
-        user.setPassword(request.getPassword() != null ? passwordEncoder.encode(request.getPassword()) : null);
         user.setPosition(position);
         user.setPermissions(permissions);
         user = userRepository.save(user);
