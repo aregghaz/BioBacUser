@@ -1,5 +1,6 @@
 package com.biobac.users.response;
 
+import com.biobac.users.dto.UserGroupDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -24,20 +25,5 @@ public class UserResponse extends AuditableResponse {
     private Long positionId;
     private String positionName;
     private List<PermissionResponse> permissions;
-
-    public Long getPositionId() {
-        return positionId;
-    }
-
-    public void setPositionId(Long positionId) {
-        this.positionId = positionId;
-    }
-
-    public String getPositionName() {
-        return positionName;
-    }
-
-    public void setPositionName(String positionName) {
-        this.positionName = positionName;
-    }
+    private List<UserGroupDto> userGroups;
 }

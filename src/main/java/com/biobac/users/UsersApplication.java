@@ -107,7 +107,6 @@ public class UsersApplication {
                 allPermissions.add(perm);
             }
 
-// ✅ Create standard CRUD permissions
             for (String entity : entities) {
                 for (String op : operations) {
                     String permName = entity + "_" + op;
@@ -205,7 +204,6 @@ public class UsersApplication {
                 adminUser.setActive(true);
             }
 
-            // ✅ Give admin user all permissions (including special)
             adminUser.setPermissions(new HashSet<>(allPermissions));
 
             userRepository.save(adminUser);

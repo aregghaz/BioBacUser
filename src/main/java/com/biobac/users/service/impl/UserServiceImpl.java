@@ -1,14 +1,16 @@
 package com.biobac.users.service.impl;
 
 import com.biobac.users.dto.PaginationMetadata;
+import com.biobac.users.dto.UserGroupDto;
 import com.biobac.users.entity.Permission;
 import com.biobac.users.entity.Position;
 import com.biobac.users.entity.User;
+import com.biobac.users.entity.UserGroup;
 import com.biobac.users.exception.DuplicateException;
 import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.mapper.UserMapper;
-import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.PositionRepository;
+import com.biobac.users.repository.UserGroupRepository;
 import com.biobac.users.repository.UserRepository;
 import com.biobac.users.request.ChangePasswordRequest;
 import com.biobac.users.request.FilterCriteria;
@@ -41,10 +43,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final PermissionRepository permissionRepository;
     private final PositionRepository positionRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final UserGroupRepository userGroupRepository;
 
     @Transactional
     @Override
@@ -66,6 +68,19 @@ public class UserServiceImpl implements UserService {
         user.setPosition(position);
         user.setPermissions(permissions);
         user = userRepository.save(user);
+
+        if (request.getGroups() != null) {
+            for (UserGroupDto dto : request.getGroups()) {
+                if (dto.getGroupIds() == null) continue;
+                for (Long groupId : dto.getGroupIds()) {
+                    UserGroup userGroup = new UserGroup();
+                    userGroup.setUser(user);
+                    userGroup.setGroupId(groupId);
+                    userGroup.setGroupType(dto.getGroupType());
+                    userGroupRepository.save(userGroup);
+                }
+            }
+        }
         return userMapper.toResponse(user);
     }
 
@@ -184,10 +199,9 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateUserByAdmin(Long userId, UserCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+
         Position position = positionRepository.findById(request.getPositionId())
                 .orElseThrow(() -> new NotFoundException("Position not found with id: " + request.getPositionId()));
-
-        Set<Permission> permissions = new HashSet<>(position.getPermissions());
 
         if (request.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -201,8 +215,40 @@ public class UserServiceImpl implements UserService {
         user.setDob(request.getDob());
         user.setActive(true);
         user.setPosition(position);
-        user.setPermissions(permissions);
+        user.setPermissions(new HashSet<>(position.getPermissions()));
+
         user = userRepository.save(user);
+
+        userGroupRepository.deleteByUser(user);
+
+        if (request.getGroups() != null && !request.getGroups().isEmpty()) {
+
+            Set<String> uniqueKeys = new HashSet<>();
+            List<UserGroup> userGroupsToSave = new ArrayList<>();
+
+            for (UserGroupDto dto : request.getGroups()) {
+                if (dto.getGroupIds() == null || dto.getGroupIds().isEmpty()) continue;
+
+                for (Long groupId : dto.getGroupIds()) {
+                    String key = dto.getGroupType() + "_" + groupId;
+                    if (uniqueKeys.add(key)) {
+                        UserGroup userGroup = new UserGroup();
+                        userGroup.setUser(user);
+                        userGroup.setGroupId(groupId);
+                        userGroup.setGroupType(dto.getGroupType());
+                        userGroupsToSave.add(userGroup);
+                    }
+                }
+            }
+
+            if (!userGroupsToSave.isEmpty()) {
+                userGroupRepository.saveAll(userGroupsToSave);
+            }
+        }
+
+        user = userRepository.findById(user.getId())
+                .orElseThrow(() -> new NotFoundException("User not found after update"));
+
         return userMapper.toResponse(user);
     }
 

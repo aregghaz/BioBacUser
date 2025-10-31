@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -23,6 +24,9 @@ public class User extends BaseAuditable {
     private String email;
     private String password;
     private Boolean active;
+
+    @OneToMany(mappedBy = "user")
+    private List<UserGroup> userGroups;
 
     @ManyToOne
     private Position position;

@@ -1,9 +1,11 @@
 package com.biobac.users.request;
 
+import com.biobac.users.dto.UserGroupDto;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,4 +18,5 @@ public class UserCreateRequest {
     private String password;
     private LocalDate dob;
     private Long positionId;
+    private List<UserGroupDto> groups;
 }

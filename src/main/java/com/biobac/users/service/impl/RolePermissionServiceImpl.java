@@ -2,12 +2,13 @@ package com.biobac.users.service.impl;
 
 import com.biobac.users.dto.RolePermissionsDto;
 import com.biobac.users.dto.SelectResponse;
-import com.biobac.users.entity.Permission;
-import com.biobac.users.entity.Role;
+import com.biobac.users.entity.*;
 import com.biobac.users.exception.NotFoundException;
 import com.biobac.users.mapper.PermissionMapper;
 import com.biobac.users.repository.PermissionRepository;
 import com.biobac.users.repository.RoleRepository;
+import com.biobac.users.repository.UserGroupRepository;
+import com.biobac.users.repository.UserRepository;
 import com.biobac.users.response.PermissionResponse;
 import com.biobac.users.service.RolePermissionService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,8 @@ public class RolePermissionServiceImpl implements RolePermissionService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final PermissionMapper permissionMapper;
+    private final UserGroupRepository userGroupRepository;
+    private final UserRepository userRepository;
 
     private static final Map<String, String> entityRuMap = Map.ofEntries(
             Map.entry("USER", "Пользователь"),
@@ -51,7 +54,7 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             Map.entry("ASSET_CATEGORY", "Категория Основные средства"),
             Map.entry("ASSET_IMPROVEMENT", "Улучшение Основные средства"),
             Map.entry("DEPARTMENT", "Отдел"),
-            Map.entry("ACCOUNT","Аккаунт"),
+            Map.entry("ACCOUNT", "Аккаунт"),
             Map.entry("DEPRECIATION_RECORD", "Запись амортизации"),
             Map.entry("EXPENSE_TYPE", "Тип расхода"),
             Map.entry("INGREDIENT_BALANCE", "Баланс ингредиентов"),
@@ -182,4 +185,13 @@ public class RolePermissionServiceImpl implements RolePermissionService {
                 ));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> getAccessGroupIds(Long userId, GroupType groupType) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        List<UserGroup> userGroups = userGroupRepository.findByUserAndGroupType(user, groupType);
+        return userGroups.stream().map(UserGroup::getGroupId).toList();
+    }
 }
