@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -21,7 +21,7 @@ public class UserResponse extends AuditableResponse {
     private String phoneNumber;
     private String email;
     private Boolean active;
-    private LocalDate dob;
+    private LocalDateTime dob;
     private Long positionId;
     private String positionName;
     private List<PermissionResponse> permissions;

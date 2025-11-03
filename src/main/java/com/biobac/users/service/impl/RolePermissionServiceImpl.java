@@ -136,7 +136,8 @@ public class RolePermissionServiceImpl implements RolePermissionService {
 
         Map<String, String> customPermissionGroupMap = Map.of(
                 "RECEIVE_INGREDIENT_STATUS_UPDATE", "Поступления ингредиента",
-                "INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки"
+                "INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки",
+                "ALL_GROUP_ACCESS", "Доступ ко всем групам"
         );
 
         Map<String, List<PermissionResponse>> grouped = permissionResponses.stream()

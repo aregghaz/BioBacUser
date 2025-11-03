@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -20,7 +20,7 @@ public class User extends BaseAuditable {
     private String firstname;
     private String lastname;
     private String phoneNumber;
-    private LocalDate dob;
+    private LocalDateTime dob;
     private String email;
     private String password;
     private Boolean active;

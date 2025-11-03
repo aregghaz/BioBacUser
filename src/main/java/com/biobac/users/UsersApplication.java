@@ -1,7 +1,6 @@
 package com.biobac.users;
 
 import com.biobac.users.entity.Permission;
-import com.biobac.users.entity.Position;
 import com.biobac.users.entity.Role;
 import com.biobac.users.entity.User;
 import com.biobac.users.repository.PermissionRepository;
@@ -83,7 +82,8 @@ public class UsersApplication {
 
             List<Map.Entry<String, String>> specialPermissions = List.of(
                     Map.entry("RECEIVE_INGREDIENT_STATUS_UPDATE", "Изменение статуса поступления ингредиента"),
-                    Map.entry("INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки")
+                    Map.entry("INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки"),
+                    Map.entry("ALL_GROUP_ACCESS", "Доступ ко всем групам")
             );
 
             for (var entry : specialPermissions) {
