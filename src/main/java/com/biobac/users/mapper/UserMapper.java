@@ -15,15 +15,18 @@ public abstract class UserMapper {
     @Autowired
     protected UserGroupMapper userGroupMapper;
 
-    @Mapping(target = "positionId", source = "position.id")
-    @Mapping(target = "positionName", source = "position.name")
-    @Mapping(target = "userGroups", ignore = true)
     public abstract UserResponse toResponse(User entity);
 
     public abstract User toEntity(UserCreateRequest request);
 
     @AfterMapping
-    protected void mapUserGroups(User entity, @MappingTarget UserResponse response) {
-        response.setUserGroups(userGroupMapper.toGroupedDtoList(entity.getUserGroups()));
+    protected void after(User entity, @MappingTarget UserResponse response) {
+        if (entity.getPosition() != null) {
+            response.setPositionId(entity.getPosition().getId());
+            response.setPositionName(entity.getPosition().getName());
+        }
+        if (entity.getUserGroups() != null) {
+            response.setUserGroups(userGroupMapper.toGroupedDtoList(entity.getUserGroups()));
+        }
     }
 }

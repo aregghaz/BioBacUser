@@ -12,6 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.biobac.users.utils.PermissionDictionary;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,67 +27,12 @@ public class UsersApplication {
     @Bean
     CommandLineRunner seedRolesAndPermissions(RoleRepository roleRepository, PermissionRepository permissionRepository, UserRepository userRepository, PasswordEncoder passwordEncoder, PositionRepository positionRepository) {
         return args -> {
-            Map<String, String> entityRuMap = Map.ofEntries(
-                    Map.entry("USER", "Пользователь"),
-                    Map.entry("WAREHOUSE", "Склад"),
-                    Map.entry("PRODUCT", "Продукт"),
-                    Map.entry("INGREDIENT", "Ингредиент"),
-                    Map.entry("INGREDIENT_COMPLETED_DEAL", "Завершённая сделка"),
-                    Map.entry("INGREDIENT_NOT_COMPLETED_DEAL", "Незавершённая сделка"),
-                    Map.entry("INGREDIENT_GROUP", "Группа ингредиентов"),
-                    Map.entry("RECIPE_ITEM", "Рецепт"),
-                    Map.entry("PRODUCT_HISTORY", "История продукта"),
-                    Map.entry("INGREDIENT_HISTORY", "История ингредиента"),
-                    Map.entry("UNIT", "Единица измерения"),
-                    Map.entry("UNIT_TYPE", "Тип единицы"),
-                    Map.entry("POSITION", "Должность"),
-                    Map.entry("PERMISSION", "Разрешение"),
-                    Map.entry("COMPANY", "Компания"),
-                    Map.entry("ATTRIBUTE", "Атрибут"),
-                    Map.entry("ATTRIBUTE_GROUP", "Группа атрибутов"),
-                    Map.entry("COMPANY_TYPE", "Тип компании"),
-                    Map.entry("COMPANY_BUYER", "Покупатели"),
-                    Map.entry("COMPANY_SELLER", "Поставщики"),
-                    Map.entry("REGION", "Регион"),
-                    Map.entry("COMPANY_SALE_TYPE", "Тип продаж компании"),
-                    Map.entry("ASSET", "Основные средства"),
-                    Map.entry("ASSET_CATEGORY", "Категория Основные средства"),
-                    Map.entry("ASSET_IMPROVEMENT", "Улучшение Основные средства"),
-                    Map.entry("DEPARTMENT", "Отдел"),
-                    Map.entry("DEPRECIATION_RECORD", "Запись амортизации"),
-                    Map.entry("EXPENSE_TYPE", "Тип расхода"),
-                    Map.entry("INGREDIENT_BALANCE", "Баланс ингредиентов"),
-                    Map.entry("INGREDIENT_DETAIL", "Деталь ингредиента"),
-                    Map.entry("MANUFACTURE_PRODUCT", "Производимый продукт"),
-                    Map.entry("PRODUCT_BALANCE", "Баланс продукта"),
-                    Map.entry("ACCOUNT", "Аккаунт"),
-                    Map.entry("PRODUCT_DETAIL", "Деталь продукта"),
-                    Map.entry("PRODUCT_GROUP", "Группа продуктов"),
-                    Map.entry("RECEIVE_EXPENSE", "Раходы закупки"),
-                    Map.entry("RECEIVE_INGREDIENT", "Постлупления ингредиента"),
-                    Map.entry("WAREHOUSE_GROUP", "Группа складов"),
-                    Map.entry("WAREHOUSE_TYPE", "Тип склада")
-            );
-
-            Map<String, String> operationRuMap = Map.of(
-                    "READ", "Просмотр",
-                    "CREATE", "Создание",
-                    "UPDATE", "Редактирование",
-                    "DELETE", "Удаление"
-            );
-
-            List<String> entities = new ArrayList<>(entityRuMap.keySet());
-            List<String> operations = List.of("READ", "CREATE", "UPDATE", "DELETE");
+            List<String> entities = new ArrayList<>(PermissionDictionary.ENTITY_RU.keySet());
+            List<String> operations = new ArrayList<>(PermissionDictionary.OPERATION_RU.keySet());
 
             Set<Permission> allPermissions = new HashSet<>();
 
-            List<Map.Entry<String, String>> specialPermissions = List.of(
-                    Map.entry("RECEIVE_INGREDIENT_STATUS_UPDATE", "Изменение статуса поступления ингредиента"),
-                    Map.entry("INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки"),
-                    Map.entry("ALL_GROUP_ACCESS", "Доступ ко всем групам")
-            );
-
-            for (var entry : specialPermissions) {
+            for (var entry : PermissionDictionary.SPECIAL_PERMISSIONS.entrySet()) {
                 String name = entry.getKey();
                 String title = entry.getValue();
 
@@ -110,7 +56,7 @@ public class UsersApplication {
             for (String entity : entities) {
                 for (String op : operations) {
                     String permName = entity + "_" + op;
-                    String title = operationRuMap.get(op) + " " + entityRuMap.getOrDefault(entity, entity);
+                    String title = PermissionDictionary.OPERATION_RU.get(op) + " " + PermissionDictionary.ENTITY_RU.getOrDefault(entity, entity);
 
                     Permission perm = permissionRepository.findByName(permName)
                             .orElseGet(() -> {
