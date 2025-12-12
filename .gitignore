@@ -12,7 +12,8 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
+/src/main/resources/demo.yml
+/src/main/resources/production.yml
 ### IntelliJ IDEA ###
 .idea
 *.iws

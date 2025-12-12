@@ -1,19 +1,23 @@
 server:
-  port: 8070
+  port: 8084
 spring:
   jpa:
-    hibernate:
-      ddl-auto: create-drop
+      hibernate:
+        ddl-auto: create
   datasource:
-    url: jdbc:mysql://localhost:3306/users
+    url: jdbc:mysql://localhost:3306/demo
     username: root
-    password:
+    password: gagulik014A!
     driver-class-name: com.mysql.cj.jdbc.Driver
   application:
-    name: users
+    name: usersDemo
 jwt:
   secret: b10bac_super_secret_key_which_is_long_enough_please_change
-  expiration-ms: 21600000
+  expiration-ms: 86400000
   refresh-token:
     secret: b10bac_refresh_super_secret_key_which_is_long_enough_please_change
     expiration-ms: 604800000
+
+
+
+
