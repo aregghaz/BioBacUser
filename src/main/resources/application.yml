@@ -18,3 +18,8 @@ jwt:
   refresh-token:
     secret: b10bac_refresh_super_secret_key_which_is_long_enough_please_change
     expiration-ms: 604800000
+logging:
+  level:
+    org.springframework.feign: DEBUG
+    org.springframework: DEBUG
+    org.springframework.web: DEBUG
