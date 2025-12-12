@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/position")
+@RequestMapping("/api/users/position")
 @RequiredArgsConstructor
 public class PositionController {
     private final PositionService positionService;

@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("/api/users/roles")
 @RequiredArgsConstructor
 public class RolePermissionController {
     private final RolePermissionService rolePermissionService;
