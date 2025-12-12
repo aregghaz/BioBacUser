@@ -1,4 +1,4 @@
-name: Deploy Company Service
+name: Deploy Users prodaction Service
 
 on:
   push:
@@ -49,11 +49,11 @@ jobs:
           scp \
             -i ~/.ssh/id_ed25519_deploy \
             -o IdentitiesOnly=yes \
-            target/company-0.0.1-SNAPSHOT.jar \
+            target/users-0.0.1-SNAPSHOT.jar \
             deploy@${{ secrets.SERVER_IP }}:/home/springapp/production/
 
       # 🔄 Restart systemd service
-      - name: Restart Company service
+      - name: Restart Users service
         run: |
           ssh \
             -i ~/.ssh/id_ed25519_deploy \

@@ -13,7 +13,7 @@ spring:
     name: users
 jwt:
   secret: b10bac_super_secret_key_which_is_long_enough_please_change
-  expiration-ms: 21600000
+  expiration-ms: 86400000
   refresh-token:
     secret: b10bac_refresh_super_secret_key_which_is_long_enough_please_change
     expiration-ms: 604800000
