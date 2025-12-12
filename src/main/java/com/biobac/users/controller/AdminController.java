@@ -15,36 +15,36 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/users/admin")
 @RequiredArgsConstructor
 public class AdminController {
     private final UserService userService;
 
-    @PostMapping("/users")
+    @PostMapping
     public ApiResponse<UserResponse> createUser(@RequestBody UserCreateRequest request) {
         return ResponseUtil.success("User created successfully", userService.createUser(request));
     }
 
-    @GetMapping("/users")
+    @GetMapping
     public ApiResponse<List<UserResponse>> listUsers() {
         List<UserResponse> users = userService.listAllUsers();
         Map<String, Object> metadata = Map.of("totalUsers", users.size());
         return ResponseUtil.success("Users fetched successfully", users, metadata);
     }
 
-    @GetMapping("/users/{userId}")
+    @GetMapping("/{userId}")
     public ApiResponse<UserResponse> getUser(@PathVariable Long userId) {
         UserResponse userDto = userService.getById(userId);
         return ResponseUtil.success("User fetched successfully", userDto);
     }
 
-    @PutMapping("/users/{userId}")
+    @PutMapping("/{userId}")
     public ApiResponse<UserResponse> updateUser(@PathVariable Long userId, @RequestBody UserCreateRequest request) {
         UserResponse userDto = userService.updateUserByAdmin(userId, request);
         return ResponseUtil.success("User updated successfully", userDto);
     }
 
-    @PostMapping("/users/pagination")
+    @PostMapping("/pagination")
     public ApiResponse<List<UserResponse>> listUsersPaginated(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
