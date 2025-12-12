@@ -1,16 +1,17 @@
 server:
-  port: 8070
+  port: 8084
 spring:
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-  datasource:
-    url: jdbc:mysql://localhost:3306/users
-    username: root
-    password:
-    driver-class-name: com.mysql.cj.jdbc.Driver
   application:
     name: users
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/production?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: biobac_user
+    password: rvz!RJKw54qv3S5%
+    driver-class-name: com.mysql.cj.jdbc.Driver
 jwt:
   secret: b10bac_super_secret_key_which_is_long_enough_please_change
   expiration-ms: 86400000

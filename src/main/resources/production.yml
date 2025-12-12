@@ -2,12 +2,13 @@ server:
   port: 8084
 spring:
   jpa:
-      hibernate:
-        ddl-auto: create
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
   datasource:
-    url: jdbc:mysql://localhost:3306/production
-    username: root
-    password: gagulik014A!
+    url: jdbc:mysql://127.0.0.1:3306/production?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: biobac_user
+    password: rvz!RJKw54qv3S5%
     driver-class-name: com.mysql.cj.jdbc.Driver
   application:
     name: usersProd
