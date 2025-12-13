@@ -75,6 +75,7 @@ public final class PermissionDictionary {
             Map.entry("RECEIVE_INGREDIENT_QUANTITY_UPDATE", "Изменение количества поступления ингредиента"),
             Map.entry("INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки"),
 
+            Map.entry("ALL_GROUP_ACCESS", "Доступ ко всем группам"),
             Map.entry("EMPLOYEE_FIRED_READ", "Просмотр уволенных сотрудников"),
             Map.entry("EMPLOYEE_HISTORY_READ", "Просмотр истории сотрудников"),
             Map.entry("ACCOUNTS_TRANSFER", "Переводы между счетами"),
