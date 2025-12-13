@@ -53,6 +53,25 @@ public class JwtUtil {
 
         claims.put("userId", user.getId());
 
+        Set<String> allowedPerms = Set.of(
+                "ALL_GROUP_ACCESS",
+                "RECEIVE_INGREDIENT_STATUS_UPDATE",
+                "INGREDIENT_ENTRY_EXPENSE_UPDATE"
+        );
+
+        Set<String> perms = new HashSet<>();
+
+        if (user.getPermissions() != null) {
+            perms = user.getPermissions().stream()
+                    .map(Permission::getName)
+                    .filter(allowedPerms::contains)
+                    .collect(Collectors.toSet());
+        }
+
+        if (!perms.isEmpty()) {
+            claims.put("perms", perms);
+        }
+
         Date now = new Date();
         Date exp = new Date(now.getTime() + jwtExpirationMs);
         return Jwts.builder()
