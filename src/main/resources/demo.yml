@@ -1,13 +1,14 @@
 server:
-  port: 8084
+  port: 8074
 spring:
   jpa:
-      hibernate:
-        ddl-auto: create
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: create
   datasource:
-    url: jdbc:mysql://localhost:3306/demo
-    username: root
-    password: gagulik014A!
+    url: jdbc:mysql://localhost:3306/demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: biobac_user
+    password: rvz!RJKw54qv3S5%
     driver-class-name: com.mysql.cj.jdbc.Driver
   application:
     name: usersDemo
