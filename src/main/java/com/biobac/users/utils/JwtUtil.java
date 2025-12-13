@@ -53,14 +53,6 @@ public class JwtUtil {
 
         claims.put("userId", user.getId());
 
-        Set<String> perms = new HashSet<>();
-        if (user.getPermissions() != null) {
-            perms.addAll(user.getPermissions().stream()
-                    .map(Permission::getName)
-                    .collect(Collectors.toSet()));
-        }
-        if (!perms.isEmpty()) claims.put("perms", perms);
-
         Date now = new Date();
         Date exp = new Date(now.getTime() + jwtExpirationMs);
         return Jwts.builder()
