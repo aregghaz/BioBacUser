@@ -4,9 +4,15 @@ import java.util.Map;
 
 public final class PermissionDictionary {
 
-    private PermissionDictionary() {}
+    private PermissionDictionary() {
+    }
 
     public static final Map<String, String> ENTITY_RU = Map.ofEntries(
+            Map.entry("OUR_COMPANY", "Наша компания"),
+            Map.entry("CONTACT_PERSON", "Контактное лицо"),
+            Map.entry("ACCOUNTS", "Счет"),
+            Map.entry("PAYMENT_CATEGORY", "Категория оплаты"),
+            Map.entry("PRICE", "Прайс-лист"),
             Map.entry("USER", "Пользователь"),
             Map.entry("WAREHOUSE", "Склад"),
             Map.entry("PRODUCT", "Продукт"),
@@ -68,7 +74,15 @@ public final class PermissionDictionary {
             Map.entry("RECEIVE_INGREDIENT_STATUS_UPDATE", "Изменение статуса поступления ингредиента"),
             Map.entry("RECEIVE_INGREDIENT_QUANTITY_UPDATE", "Изменение количества поступления ингредиента"),
             Map.entry("INGREDIENT_ENTRY_EXPENSE_UPDATE", "Обновление расходов для закупки"),
-            Map.entry("ALL_GROUP_ACCESS", "Доступ ко всем группам"),
+
+            Map.entry("EMPLOYEE_FIRED_READ", "Просмотр уволенных сотрудников"),
+            Map.entry("EMPLOYEE_HISTORY_READ", "Просмотр истории сотрудников"),
+            Map.entry("ACCOUNTS_TRANSFER", "Переводы между счетами"),
+            Map.entry("PAYMENT_CREATE", "Создание платежей"),
+            Map.entry("PAYMENT_HISTORY_READ", "Просмотр истории платежей"),
+            Map.entry("SALE_PAYMENT_READ", "Просмотр платежей по продажам"),
+            Map.entry("SALE_COMPLETED_READ", "Просмотр завершённых продаж"),
+            Map.entry("SALE_NOT_COMPLETED_READ", "Просмотр незавершённых продаж "),
 
             Map.entry("COMPONENT_INGREDIENT_TRANSFER", "Перемещение ингредиентов между складами"),
             Map.entry("COMPONENT_PRODUCT_TRANSFER", "Перемещение продуктов между складами"),
